@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T2 — File System | Phase 1 Linux Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161c;
+    --surface2: #191d25;
+    --surface3: #1f242e;
+    --border: #272c37;
+    --border2: #333a47;
+    --text: #e4e8f0;
+    --text2: #8e97a8;
+    --text3: #545f70;
+    --accent: #60a5fa;
+    --accent2: #34d399;
+    --accent3: #f87171;
+    --accent4: #fbbf24;
+    --accent5: #a78bfa;
+    --accent6: #fb923c;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; min-height: 100vh; }
+  .app { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { width: 255px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; display: flex; flex-direction: column; }
+  .sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+  .phase-badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 8px; background: rgba(96,165,250,0.12); color: var(--accent); border-radius: 4px; border: 1px solid rgba(96,165,250,0.25); margin-bottom: 8px; letter-spacing: 0.05em; }
+  .sidebar-header h1 { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .sidebar-header p { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); padding: 14px 16px 5px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 16px; font-size: 12.5px; color: var(--text2); cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(96,165,250,0.06); }
+  .nav-icon { font-size: 13px; width: 16px; flex-shrink: 0; }
+  .progress-bar { margin: 14px 16px 4px; background: var(--surface3); border-radius: 4px; height: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; transition: width 0.2s; }
+  .progress-label { font-family: var(--mono); font-size: 10px; color: var(--text3); margin: 0 16px 14px; }
+
+  /* Main */
+  .main { margin-left: 255px; flex: 1; max-width: 920px; padding: 40px 48px; }
+
+  /* Hero */
+  .hero { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .topic-tag { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 12px; display: block; }
+  .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+  .hero h1 span { color: var(--accent); }
+  .hero-meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .meta-chip { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .meta-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .hero-desc { font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 680px; }
+  .outcomes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 20px; }
+  .outcome-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); padding: 10px 14px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+  .outcome-item::before { content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+
+  /* Sections */
+  .section { margin-bottom: 54px; scroll-margin-top: 24px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .section-icon { font-size: 18px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+  .section-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .section-num { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 2px; }
+  h3 { font-size: 14px; font-weight: 700; color: var(--accent2); margin: 20px 0 8px; font-family: var(--mono); letter-spacing: 0.03em; }
+  p { color: var(--text2); line-height: 1.75; margin-bottom: 12px; }
+  p strong { color: var(--text); font-weight: 600; }
+
+  /* Note Blocks */
+  .note { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+  .note-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px; font-family: var(--mono); }
+  .note p { margin: 0; font-size: 14px; }
+  .note-mental { background: rgba(96,165,250,0.06); border-color: var(--accent); }
+  .note-mental .note-label { color: var(--accent); }
+  .note-cmd { background: rgba(52,211,153,0.06); border-color: var(--accent2); }
+  .note-cmd .note-label { color: var(--accent2); }
+  .note-files { background: rgba(251,146,60,0.06); border-color: var(--accent6); }
+  .note-files .note-label { color: var(--accent6); }
+  .note-hood { background: rgba(167,139,250,0.06); border-color: var(--accent5); }
+  .note-hood .note-label { color: var(--accent5); }
+  .note-real { background: rgba(34,197,94,0.06); border-color: var(--green); }
+  .note-real .note-label { color: var(--green); }
+  .note-warn { background: rgba(239,68,68,0.06); border-color: var(--red); }
+  .note-warn .note-label { color: var(--red); }
+  .note-debug { background: rgba(245,158,11,0.06); border-color: var(--yellow); }
+  .note-debug .note-label { color: var(--yellow); }
+  .note-sec { background: rgba(248,113,113,0.07); border-color: #f87171; }
+  .note-sec .note-label { color: #f87171; }
+  .note-perf { background: rgba(52,211,153,0.06); border-color: #2dd4bf; }
+  .note-perf .note-label { color: #2dd4bf; }
+  .note-senior { background: rgba(167,139,250,0.08); border-color: var(--accent5); }
+  .note-senior .note-label { color: var(--accent5); }
+  .note-try { background: rgba(96,165,250,0.07); border-color: var(--accent); }
+  .note-try .note-label { color: var(--accent); }
+  .note-break { background: rgba(248,113,113,0.06); border-color: var(--accent3); }
+  .note-break .note-label { color: var(--accent3); }
+
+  /* Code */
+  pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; overflow-x: auto; margin: 12px 0; font-family: var(--mono); font-size: 13px; line-height: 1.7; }
+  code { font-family: var(--mono); font-size: 13px; background: var(--surface3); padding: 2px 6px; border-radius: 4px; color: var(--accent2); }
+  pre code { background: none; padding: 0; color: var(--text); }
+  .cm { color: var(--text3); }
+  .cn { color: var(--accent2); }
+  .fl { color: var(--accent4); }
+  .st { color: var(--green); }
+  .op { color: var(--text); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+  th { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); text-align: left; }
+  td { padding: 9px 12px; border: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+  td code { font-size: 12px; }
+  tr:hover td { background: var(--surface2); }
+
+  /* Lists */
+  ul, ol { padding-left: 20px; margin: 10px 0; }
+  li { color: var(--text2); margin-bottom: 6px; line-height: 1.65; font-size: 14px; }
+  li strong { color: var(--text); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* Tree diagram */
+  .tree { font-family: var(--mono); font-size: 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; line-height: 1.9; overflow-x: auto; }
+  .tree-dir { color: var(--accent); font-weight: 500; }
+  .tree-file { color: var(--text2); }
+  .tree-desc { color: var(--text3); font-size: 12px; }
+  .tree-sym { color: var(--accent4); }
+  .tree-special { color: var(--accent5); }
+
+  /* Permission visual */
+  .perm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+  .perm-cell { padding: 12px 10px; text-align: center; background: var(--surface2); border-right: 1px solid var(--border); }
+  .perm-cell:last-child { border-right: none; }
+  .perm-cell:nth-child(4), .perm-cell:nth-child(5), .perm-cell:nth-child(6) { border-top: 1px solid var(--border); }
+  .perm-cell:nth-child(7), .perm-cell:nth-child(8), .perm-cell:nth-child(9) { border-top: 1px solid var(--border); }
+  .perm-who { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .perm-bits { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .perm-bits.owner { color: var(--accent); }
+  .perm-bits.group { color: var(--accent4); }
+  .perm-bits.other { color: var(--accent5); }
+  .perm-octal { font-family: var(--mono); font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+  /* Lab blocks */
+  .lab-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+  .lab-header { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--surface3); border-bottom: 1px solid var(--border); }
+  .lab-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+  .lab-badge.beginner { background: rgba(34,197,94,0.15); color: var(--green); }
+  .lab-badge.intermediate { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .lab-badge.advanced { background: rgba(239,68,68,0.15); color: var(--red); }
+  .lab-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .lab-body { padding: 14px 16px; }
+  .lab-step { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; font-size: 13.5px; color: var(--text2); }
+  .step-num { font-family: var(--mono); font-size: 11px; background: var(--surface3); border: 1px solid var(--border); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0; color: var(--accent); margin-top: 1px; }
+
+  /* Incident */
+  .incident { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
+  .incident-label { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--red); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .incident h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+  /* Interview */
+  .iq-item { border-left: 2px solid var(--border2); padding: 9px 16px; margin: 7px 0; transition: border-color 0.15s; }
+  .iq-item:hover { border-left-color: var(--accent); }
+  .iq-level { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+  .level-jr { color: var(--green); }
+  .level-mid { color: var(--yellow); }
+  .level-sr { color: var(--accent3); }
+  .iq-q { font-size: 14px; color: var(--text); font-weight: 500; }
+  .iq-hint { font-size: 12px; color: var(--text3); margin-top: 3px; font-style: italic; }
+
+  /* Cheat sheet */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .cheat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .cheat-card h4 { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+  .cheat-row { display: flex; gap: 8px; align-items: baseline; margin-bottom: 5px; font-size: 13px; }
+  .cheat-cmd { font-family: var(--mono); color: var(--accent2); flex-shrink: 0; min-width: 145px; font-size: 12px; }
+  .cheat-desc { color: var(--text3); font-size: 12px; }
+
+  /* Senior block */
+  .senior-block { background: linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(96,165,250,0.04) 100%); border: 1px solid rgba(167,139,250,0.2); border-radius: 10px; padding: 20px 24px; margin: 20px 0; }
+  .senior-block h4 { font-size: 15px; font-weight: 700; color: var(--accent5); margin-bottom: 10px; }
+
+  /* Recap */
+  .recap { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  .recap h4 { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+
+  /* Capstone box */
+  .capstone-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; border-left: 3px solid var(--accent2); }
+
+  /* Perm demo */
+  .perm-demo { font-family: var(--mono); font-size: 18px; letter-spacing: 0.05em; }
+  .p-type { color: var(--accent4); }
+  .p-owner { color: var(--accent); }
+  .p-group { color: var(--accent5); }
+  .p-other { color: var(--text2); }
+
+  .mob-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 200; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 18px; cursor: pointer; font-family: var(--mono); font-weight: 700; }
+  @media (max-width: 800px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 24px 20px; }
+    .mob-toggle { display: flex; align-items: center; justify-content: center; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="phase-badge">PHASE 1 · TOPIC 2</span>
+    <h1>File System</h1>
+    <p>Linux Mastery Curriculum</p>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="progress-label" id="prog-label">0% read</div>
+  <div class="nav-section-label">Foundations</div>
+  <a class="nav-item" href="#overview"><span class="nav-icon">▶</span>Overview & Outcomes</a>
+  <a class="nav-item" href="#s1"><span class="nav-icon">🧠</span>Beginner Intuition</a>
+  <a class="nav-item" href="#s2"><span class="nav-icon">📖</span>Core Fundamentals</a>
+  <a class="nav-item" href="#s3"><span class="nav-icon">⚙️</span>Commands & Syntax</a>
+  <a class="nav-item" href="#s4"><span class="nav-icon">📁</span>Files & Configs</a>
+  <a class="nav-item" href="#s5"><span class="nav-icon">🔬</span>Under the Hood</a>
+  <div class="nav-section-label">Practical</div>
+  <a class="nav-item" href="#s6"><span class="nav-icon">🏭</span>Real-World Usage</a>
+  <a class="nav-item" href="#s7"><span class="nav-icon">🔄</span>Modern vs Legacy</a>
+  <a class="nav-item" href="#s8"><span class="nav-icon">⚠️</span>Beginner Mistakes</a>
+  <a class="nav-item" href="#s9"><span class="nav-icon">🏗️</span>Production Mistakes</a>
+  <a class="nav-item" href="#s10"><span class="nav-icon">🛠</span>Debug Workflow</a>
+  <div class="nav-section-label">Senior Level</div>
+  <a class="nav-item" href="#s11"><span class="nav-icon">🔐</span>Security</a>
+  <a class="nav-item" href="#s12"><span class="nav-icon">🚀</span>Performance</a>
+  <a class="nav-item" href="#s13"><span class="nav-icon">💡</span>Best Practices</a>
+  <a class="nav-item" href="#s14"><span class="nav-icon">🔥</span>Incident Scenarios</a>
+  <div class="nav-section-label">Labs & Review</div>
+  <a class="nav-item" href="#s15"><span class="nav-icon">🧪</span>Hands-On Labs</a>
+  <a class="nav-item" href="#s16"><span class="nav-icon">💣</span>Break & Fix</a>
+  <a class="nav-item" href="#s17"><span class="nav-icon">🎯</span>Mini Project</a>
+  <a class="nav-item" href="#s18"><span class="nav-icon">🏆</span>Capstone Connection</a>
+  <a class="nav-item" href="#s19"><span class="nav-icon">❓</span>Interview Questions</a>
+  <a class="nav-item" href="#s20"><span class="nav-icon">📝</span>Cheat Sheet</a>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+<!-- Hero -->
+<div class="hero" id="overview">
+  <span class="topic-tag">PHASE 1 · TOPIC 2 OF 8 · EST. 4–5 HOURS</span>
+  <h1>File <span>System</span></h1>
+  <div class="hero-meta">
+    <div class="meta-chip"><div class="dot"></div>4–5 hours study</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--accent2)"></div>Beginner → Senior</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--accent4)"></div>Ubuntu 22.04 LTS</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--accent5)"></div>Prereq: T1 Shell Basics</div>
+  </div>
+  <p class="hero-desc">The Linux file system is not just where files live — it is the entire interface to the OS. Devices, processes, network sockets, and kernel parameters are all represented as files. Understanding this model is the difference between a user who copies commands and an engineer who understands the system.</p>
+  <div class="outcomes-grid">
+    <div class="outcome-item">Explain the FHS (Filesystem Hierarchy Standard) and what lives where</div>
+    <div class="outcome-item">Navigate, create, copy, move and delete files and directories</div>
+    <div class="outcome-item">Read, set and reason about permissions (symbolic and octal)</div>
+    <div class="outcome-item">Understand hard links, soft links, and inodes</div>
+    <div class="outcome-item">Use find, locate, and xargs for file operations at scale</div>
+    <div class="outcome-item">Understand mount points, disk layout, and /proc /sys /dev</div>
+    <div class="outcome-item">Know special file types: devices, sockets, named pipes</div>
+    <div class="outcome-item">Debug permission denied, disk full, and missing file errors</div>
+  </div>
+</div>
+
+<!-- S1: Beginner Intuition -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon">🧠</div>
+    <div><div class="section-title">Beginner Intuition</div><div class="section-num">Section 01 — Simple Mental Model</div></div>
+  </div>
+  <div class="note note-mental">
+    <div class="note-label">🧠 Mental Model</div>
+    <p>Imagine Linux as a <strong>building</strong>. The entire building is called <code>/</code> (root). Every floor, room, and drawer inside is a directory or file. There is only one building — everything is inside it. Even external hard drives, USB sticks, and network shares get <em>attached</em> (mounted) into a room in this same building. You never leave the building.</p>
+  </div>
+  <p>This single-tree model is the key difference from Windows, which gives each disk its own letter (C:, D:). In Linux, a USB drive might appear at <code>/media/ubuntu/usb</code> — it is just another directory in the same tree.</p>
+  <p>Another crucial mental model: <strong>in Linux, everything is a file</strong>. Your keyboard is a file (<code>/dev/input/event0</code>). Running processes are files (<code>/proc/1234/</code>). The hard disk is a file (<code>/dev/sda</code>). Your network card has a file. This uniform interface is what makes Linux so composable.</p>
+  <div class="note note-try">
+    <div class="note-label">✅ Try It Now</div>
+    <p>Run <code>ls /</code> right now. You are looking at the top of the entire Linux file system. Every directory you see there will mean something by the end of this topic.</p>
+  </div>
+</div>
+
+<!-- S2: Core Fundamentals -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon">📖</div>
+    <div><div class="section-title">Core Fundamentals</div><div class="section-num">Section 02 — FHS, paths, and the directory tree</div></div>
+  </div>
+
+  <h3>The Filesystem Hierarchy Standard (FHS)</h3>
+  <p>The FHS is the spec that defines where things live on a Linux system. Every major distro follows it. Knowing this means you can navigate any Linux server you've never seen before.</p>
+
+  <div class="tree">
+<span class="tree-dir">/</span>  <span class="tree-desc">← root of the entire filesystem tree</span>
+├── <span class="tree-dir">bin</span>   <span class="tree-desc">← essential binaries: ls, cat, cp (→ symlink to /usr/bin on modern systems)</span>
+├── <span class="tree-dir">boot</span>  <span class="tree-desc">← kernel, bootloader (GRUB), initramfs</span>
+├── <span class="tree-dir">dev</span>   <span class="tree-desc">← device files: disks, terminals, random, null</span>
+├── <span class="tree-dir">etc</span>   <span class="tree-desc">← system configuration files (text-based, editable)</span>
+├── <span class="tree-dir">home</span>  <span class="tree-desc">← user home directories: /home/alice, /home/bob</span>
+├── <span class="tree-dir">lib</span>   <span class="tree-desc">← shared libraries for /bin and /sbin binaries</span>
+├── <span class="tree-dir">media</span> <span class="tree-desc">← auto-mount point for removable media (USB, CD)</span>
+├── <span class="tree-dir">mnt</span>   <span class="tree-desc">← manual temporary mount points</span>
+├── <span class="tree-dir">opt</span>   <span class="tree-desc">← optional third-party software packages</span>
+├── <span class="tree-dir">proc</span>  <span class="tree-desc">← virtual fs: running process info, kernel state (not on disk!)</span>
+├── <span class="tree-dir">root</span>  <span class="tree-desc">← root user's home directory (separate from /home)</span>
+├── <span class="tree-dir">run</span>   <span class="tree-desc">← runtime data (PIDs, sockets) — cleared on reboot</span>
+├── <span class="tree-dir">sbin</span>  <span class="tree-desc">← system binaries for root: fdisk, mount, ifconfig</span>
+├── <span class="tree-dir">srv</span>   <span class="tree-desc">← data for services: /srv/www, /srv/ftp</span>
+├── <span class="tree-dir">sys</span>   <span class="tree-desc">← virtual fs: kernel/hardware state, tunable parameters</span>
+├── <span class="tree-dir">tmp</span>   <span class="tree-desc">← temporary files (cleared on reboot — do NOT store important data here)</span>
+├── <span class="tree-dir">usr</span>   <span class="tree-desc">← user programs and data (read-only in ideal setups)</span>
+│   ├── <span class="tree-dir">bin</span>   <span class="tree-desc">← most user commands: vim, python3, git</span>
+│   ├── <span class="tree-dir">lib</span>   <span class="tree-desc">← shared libraries for /usr/bin programs</span>
+│   ├── <span class="tree-dir">local</span> <span class="tree-desc">← locally compiled software (not from package manager)</span>
+│   └── <span class="tree-dir">share</span> <span class="tree-desc">← arch-independent data: man pages, docs, icons</span>
+└── <span class="tree-dir">var</span>   <span class="tree-desc">← variable data that grows: logs, caches, mail, databases</span>
+    ├── <span class="tree-dir">log</span>   <span class="tree-desc">← system and application logs</span>
+    ├── <span class="tree-dir">lib</span>   <span class="tree-desc">← persistent app state (databases, package manager state)</span>
+    └── <span class="tree-dir">cache</span> <span class="tree-desc">← application caches (safe to delete)</span>
+  </div>
+
+  <h3>Absolute vs Relative Paths</h3>
+  <table>
+    <tr><th>Type</th><th>Starts with</th><th>Example</th><th>Means</th></tr>
+    <tr><td>Absolute</td><td><code>/</code></td><td><code>/home/ubuntu/file.txt</code></td><td>Full path from root — always unambiguous</td></tr>
+    <tr><td>Relative</td><td>anything else</td><td><code>Documents/file.txt</code></td><td>Relative to your current directory</td></tr>
+    <tr><td>Home shortcut</td><td><code>~</code></td><td><code>~/Documents/file.txt</code></td><td>Expands to your home directory</td></tr>
+    <tr><td>Current dir</td><td><code>./</code></td><td><code>./script.sh</code></td><td>Explicitly the current directory</td></tr>
+    <tr><td>Parent dir</td><td><code>../</code></td><td><code>../config.txt</code></td><td>One directory up</td></tr>
+  </table>
+
+  <h3>File Types in Linux</h3>
+  <p>Linux has more than just regular files and directories. The first character of <code>ls -la</code> output tells you the type:</p>
+  <table>
+    <tr><th>Symbol</th><th>Type</th><th>Example</th><th>Description</th></tr>
+    <tr><td><code>-</code></td><td>Regular file</td><td><code>config.txt</code></td><td>Text, binary, scripts, anything</td></tr>
+    <tr><td><code>d</code></td><td>Directory</td><td><code>/home/ubuntu</code></td><td>A container of files</td></tr>
+    <tr><td><code>l</code></td><td>Symbolic link</td><td><code>/bin → /usr/bin</code></td><td>A pointer to another file/dir</td></tr>
+    <tr><td><code>b</code></td><td>Block device</td><td><code>/dev/sda</code></td><td>Hard disks, USB drives</td></tr>
+    <tr><td><code>c</code></td><td>Character device</td><td><code>/dev/tty</code></td><td>Terminals, serial ports</td></tr>
+    <tr><td><code>p</code></td><td>Named pipe (FIFO)</td><td><code>/tmp/mypipe</code></td><td>IPC between processes</td></tr>
+    <tr><td><code>s</code></td><td>Socket</td><td><code>/var/run/docker.sock</code></td><td>Network/IPC communication</td></tr>
+  </table>
+
+  <h3>Linux File Permissions — The Core Model</h3>
+  <p>Every file has three sets of permissions for three classes of user:</p>
+
+  <div class="perm-demo" style="padding: 16px 20px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); margin: 12px 0; font-size: 22px; letter-spacing: 2px;">
+    <span class="p-type">-</span><span class="p-owner">rwx</span><span class="p-group">r-x</span><span class="p-other">r--</span>&nbsp;&nbsp;
+    <span style="font-size: 14px; color: var(--text3); font-family: var(--mono); letter-spacing: 0;">← type | owner | group | others</span>
+  </div>
+
+  <div class="perm-grid">
+    <div class="perm-cell"><div class="perm-who">Owner (u)</div><div class="perm-bits owner">rwx</div><div class="perm-octal">7</div></div>
+    <div class="perm-cell"><div class="perm-who">Group (g)</div><div class="perm-bits group">r-x</div><div class="perm-octal">5</div></div>
+    <div class="perm-cell"><div class="perm-who">Others (o)</div><div class="perm-bits other">r--</div><div class="perm-octal">4</div></div>
+    <div class="perm-cell" style="border-top:1px solid var(--border)"><div class="perm-who">r = read</div><div class="perm-bits" style="color:var(--text2); font-size:15px">value: 4</div></div>
+    <div class="perm-cell" style="border-top:1px solid var(--border)"><div class="perm-who">w = write</div><div class="perm-bits" style="color:var(--text2); font-size:15px">value: 2</div></div>
+    <div class="perm-cell" style="border-top:1px solid var(--border)"><div class="perm-who">x = execute</div><div class="perm-bits" style="color:var(--text2); font-size:15px">value: 1</div></div>
+  </div>
+
+  <pre><code><span class="cm"># Reading octal: add up the values for each set</span>
+<span class="cm"># rwx = 4+2+1 = 7   r-x = 4+0+1 = 5   r-- = 4+0+0 = 4</span>
+<span class="cm"># So -rwxr-xr-- = 754</span>
+
+<span class="cm"># Common permission values you'll see daily:</span>
+<span class="cm"># 644 (-rw-r--r--)  regular file, owner can write, others read only</span>
+<span class="cm"># 755 (-rwxr-xr-x)  script/binary, everyone can execute</span>
+<span class="cm"># 700 (-rwx------)  private script, only owner can access</span>
+<span class="cm"># 600 (-rw-------)  private file (SSH keys MUST be this)</span>
+<span class="cm"># 777 (-rwxrwxrwx)  everyone full access — dangerous, almost never correct</span></code></pre>
+
+  <h3>Inodes — The real identity of a file</h3>
+  <p>Every file is represented by an <strong>inode</strong> — a data structure stored on disk that contains all metadata about the file: permissions, owner, size, timestamps, and pointers to the actual data blocks. The filename is just a label attached to an inode via a directory entry. The inode number is the file's real identity.</p>
+
+  <pre><code><span class="cn">ls</span> <span class="fl">-li</span> /etc/passwd
+<span class="cm"># 131073 -rw-r--r-- 1 root root 2847 Jan 15 09:22 /etc/passwd</span>
+<span class="cm"># 131073 = inode number</span>
+
+<span class="cn">stat</span> /etc/passwd        <span class="cm"># full inode info: size, blocks, inode num, all timestamps</span></code></pre>
+</div>
+
+<!-- S3: Commands -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon">⚙️</div>
+    <div><div class="section-title">Commands & Syntax</div><div class="section-num">Section 03 — Every essential file system command</div></div>
+  </div>
+
+  <h3>Creating, copying, moving, deleting</h3>
+  <pre><code><span class="cm"># Create</span>
+<span class="cn">touch</span> <span class="st">file.txt</span>              <span class="cm"># create empty file (or update timestamp if exists)</span>
+<span class="cn">mkdir</span> <span class="st">mydir</span>                 <span class="cm"># create directory</span>
+<span class="cn">mkdir</span> <span class="fl">-p</span> <span class="st">a/b/c/d</span>           <span class="cm"># create entire path at once (no error if exists)</span>
+<span class="cn">mkdir</span> <span class="fl">-m 750</span> <span class="st">securedir</span>     <span class="cm"># create with specific permissions</span>
+
+<span class="cm"># Copy</span>
+<span class="cn">cp</span> <span class="st">file.txt copy.txt</span>        <span class="cm"># copy file</span>
+<span class="cn">cp</span> <span class="fl">-r</span> <span class="st">dir1/ dir2/</span>          <span class="cm"># copy directory recursively</span>
+<span class="cn">cp</span> <span class="fl">-p</span> <span class="st">file.txt backup.txt</span>  <span class="cm"># preserve: timestamps, permissions, owner</span>
+<span class="cn">cp</span> <span class="fl">-a</span> <span class="st">dir1/ dir2/</span>          <span class="cm"># archive mode: recursive + preserve everything</span>
+<span class="cn">cp</span> <span class="fl">-v</span> <span class="st">file.txt dest/</span>       <span class="cm"># verbose: show what's being copied</span>
+
+<span class="cm"># Move / Rename</span>
+<span class="cn">mv</span> <span class="st">file.txt newname.txt</span>    <span class="cm"># rename file</span>
+<span class="cn">mv</span> <span class="st">file.txt /tmp/</span>          <span class="cm"># move to /tmp directory</span>
+<span class="cn">mv</span> <span class="fl">-i</span> <span class="st">file.txt dest/</span>       <span class="cm"># interactive: ask before overwriting</span>
+<span class="cn">mv</span> <span class="fl">-n</span> <span class="st">file.txt dest/</span>       <span class="cm"># no clobber: never overwrite</span>
+
+<span class="cm"># Delete</span>
+<span class="cn">rm</span> <span class="st">file.txt</span>                 <span class="cm"># delete file</span>
+<span class="cn">rm</span> <span class="fl">-i</span> <span class="st">file.txt</span>             <span class="cm"># ask before deleting (safer)</span>
+<span class="cn">rm</span> <span class="fl">-r</span> <span class="st">mydir/</span>               <span class="cm"># delete directory recursively</span>
+<span class="cn">rm</span> <span class="fl">-rf</span> <span class="st">mydir/</span>              <span class="cm"># force delete, no questions asked (dangerous!)</span>
+<span class="cn">rmdir</span> <span class="st">emptydir</span>             <span class="cm"># remove directory ONLY if empty (safer than rm -r)</span></code></pre>
+
+  <div class="note note-warn">
+    <div class="note-label">⚠️ The most dangerous command in Linux</div>
+    <p><code>rm -rf /</code> deletes the entire filesystem. Modern systems protect against this with <code>--no-preserve-root</code> being required, but <code>rm -rf /*</code> still works. Always double-check paths before using <code>-rf</code>. Use <code>echo rm -rf path</code> to do a dry run first.</p>
+  </div>
+
+  <h3>Permissions commands</h3>
+  <pre><code><span class="cm"># chmod — change file permissions</span>
+<span class="cn">chmod</span> <span class="st">755</span> <span class="st">script.sh</span>           <span class="cm"># octal: rwxr-xr-x</span>
+<span class="cn">chmod</span> <span class="st">644</span> <span class="st">config.txt</span>          <span class="cm"># octal: rw-r--r--</span>
+<span class="cn">chmod</span> <span class="fl">u+x</span> <span class="st">script.sh</span>          <span class="cm"># symbolic: add execute for owner</span>
+<span class="cn">chmod</span> <span class="fl">g-w</span> <span class="st">file.txt</span>           <span class="cm"># symbolic: remove write from group</span>
+<span class="cn">chmod</span> <span class="fl">o=r</span> <span class="st">file.txt</span>           <span class="cm"># symbolic: set others to read only</span>
+<span class="cn">chmod</span> <span class="fl">a+r</span> <span class="st">file.txt</span>           <span class="cm"># a = all (u+g+o): add read for everyone</span>
+<span class="cn">chmod</span> <span class="fl">-R</span> <span class="st">755</span> <span class="st">mydir/</span>          <span class="cm"># recursive: apply to all files in directory</span>
+
+<span class="cm"># chown — change file owner and group</span>
+<span class="cn">chown</span> <span class="st">ubuntu file.txt</span>        <span class="cm"># change owner to ubuntu</span>
+<span class="cn">chown</span> <span class="st">ubuntu:webteam</span> <span class="st">file.txt</span><span class="cm"> # change owner AND group</span>
+<span class="cn">chown</span> <span class="fl">:webteam</span> <span class="st">file.txt</span>      <span class="cm"># change group only (same as chgrp)</span>
+<span class="cn">chown</span> <span class="fl">-R</span> <span class="st">www-data:www-data</span> <span class="st">/var/www</span> <span class="cm"># recursive (common for web apps)</span>
+
+<span class="cm"># chgrp — change group only</span>
+<span class="cn">chgrp</span> <span class="st">developers file.txt</span></code></pre>
+
+  <h3>Links: hard links and symbolic links</h3>
+  <div class="note note-mental">
+    <div class="note-label">🧠 Mental Model</div>
+    <p><strong>Hard link</strong> = another name pointing to the same inode (same data on disk). Delete one name — data still exists via the other. <strong>Symbolic link</strong> = a shortcut file that contains a path. Delete the target — the symlink breaks (dangles). Think of hard links as aliases and symlinks as shortcuts.</p>
+  </div>
+  <pre><code><span class="cm"># Hard links</span>
+<span class="cn">ln</span> <span class="st">original.txt hardlink.txt</span>  <span class="cm"># create hard link</span>
+<span class="cn">ls</span> <span class="fl">-li</span> <span class="st">original.txt hardlink.txt</span> <span class="cm"># both show the SAME inode number</span>
+<span class="cm"># Hard links: can't cross filesystems, can't link directories</span>
+
+<span class="cm"># Symbolic links</span>
+<span class="cn">ln</span> <span class="fl">-s</span> <span class="st">/etc/nginx/sites-available/mysite</span> <span class="st">/etc/nginx/sites-enabled/mysite</span>
+<span class="cm"># ↑ Real production pattern: enable nginx sites via symlinks</span>
+<span class="cn">ln</span> <span class="fl">-s</span> <span class="st">/usr/bin/python3</span> <span class="st">/usr/local/bin/python</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">/etc/nginx/sites-enabled/</span>
+<span class="cm"># lrwxrwxrwx 1 root root  34 Jan 15 mysite -> /etc/nginx/sites-available/mysite</span>
+<span class="cm"># l = symlink, -> shows the target</span>
+
+<span class="cm"># Check and repair symlinks</span>
+<span class="cn">readlink</span> <span class="fl">-f</span> <span class="st">mysymlink</span>         <span class="cm"># resolve to final real path</span>
+<span class="cn">find</span> <span class="st">/etc</span> <span class="fl">-xtype l</span>           <span class="cm"># find all broken symlinks</span></code></pre>
+
+  <h3>Finding files</h3>
+  <pre><code><span class="cm"># find — powerful, always available, works on live filesystem</span>
+<span class="cn">find</span> <span class="st">/home</span> <span class="fl">-name</span> <span class="st">"*.log"</span>     <span class="cm"># find by name pattern</span>
+<span class="cn">find</span> <span class="st">/</span> <span class="fl">-name</span> <span class="st">"passwd"</span> <span class="fl">-type f</span> <span class="cm"># by name AND type (f=file, d=dir, l=link)</span>
+<span class="cn">find</span> <span class="st">/var/log</span> <span class="fl">-mtime -1</span>      <span class="cm"># modified in the last 1 day</span>
+<span class="cn">find</span> <span class="st">/var/log</span> <span class="fl">-mtime +30</span>     <span class="cm"># modified more than 30 days ago</span>
+<span class="cn">find</span> <span class="st">/home</span> <span class="fl">-size +100M</span>       <span class="cm"># files larger than 100MB</span>
+<span class="cn">find</span> <span class="st">/</span> <span class="fl">-perm 777</span>             <span class="cm"># files with exactly 777 permissions</span>
+<span class="cn">find</span> <span class="st">/</span> <span class="fl">-user ubuntu</span>          <span class="cm"># files owned by ubuntu</span>
+<span class="cn">find</span> <span class="st">/tmp</span> <span class="fl">-name</span> <span class="st">"*.tmp"</span> <span class="fl">-delete</span> <span class="cm"># find AND delete matching files</span>
+<span class="cn">find</span> <span class="st">/etc</span> <span class="fl">-name</span> <span class="st">"*.conf"</span> <span class="fl">-exec grep -l "listen" {} \;</span> <span class="cm"># find then run command on each</span>
+
+<span class="cm"># xargs — feed find results into another command efficiently</span>
+<span class="cn">find</span> <span class="st">/var/log</span> <span class="fl">-name</span> <span class="st">"*.log"</span> <span class="fl">-mtime +30</span> | <span class="cn">xargs</span> <span class="cn">rm</span> <span class="fl">-f</span>
+<span class="cn">find</span> <span class="st">/home</span> <span class="fl">-name</span> <span class="st">"*.txt"</span> | <span class="cn">xargs</span> <span class="cn">grep</span> <span class="fl">-l</span> <span class="st">"TODO"</span>
+
+<span class="cm"># locate — searches a pre-built index (much faster, but may be stale)</span>
+<span class="cn">locate</span> <span class="st">nginx.conf</span>            <span class="cm"># instant search from index</span>
+<span class="cn">updatedb</span>                     <span class="cm"># refresh the index (run as root)</span></code></pre>
+
+  <h3>Disk usage and space</h3>
+  <pre><code><span class="cn">df</span> <span class="fl">-h</span>                         <span class="cm"># disk free: show all mounted filesystems + usage</span>
+<span class="cn">df</span> <span class="fl">-i</span>                         <span class="cm"># inode usage (can be full even if disk has space!)</span>
+<span class="cn">du</span> <span class="fl">-sh</span> <span class="st">/var/log</span>              <span class="cm"># disk usage: total size of directory</span>
+<span class="cn">du</span> <span class="fl">-sh</span> <span class="st">/var/log/*</span>            <span class="cm"># size of each item inside /var/log</span>
+<span class="cn">du</span> <span class="fl">-sh</span> <span class="st">/var/log/*</span> | <span class="cn">sort</span> <span class="fl">-rh</span> | <span class="cn">head</span> <span class="fl">10</span>  <span class="cm"># top 10 space hogs</span>
+<span class="cn">du</span> <span class="fl">-d 1 -h</span> <span class="st">/var</span>             <span class="cm"># depth-1: show immediate children only</span></code></pre>
+
+  <h3>Special permission bits</h3>
+  <pre><code><span class="cm"># SetUID (SUID) — run as the file's owner, not the caller</span>
+<span class="cm"># Example: /usr/bin/passwd is owned by root, has SUID set</span>
+<span class="cm"># So any user can change their password (it briefly runs as root)</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">/usr/bin/passwd</span>
+<span class="cm"># -rwsr-xr-x root root ... (s in owner execute = SUID set)</span>
+
+<span class="cm"># SetGID (SGID) — files created in directory inherit group</span>
+<span class="cn">chmod</span> <span class="st">g+s</span> <span class="st">shared_dir/</span>       <span class="cm"># new files get the dir's group, not creator's</span>
+
+<span class="cm"># Sticky bit — only owner can delete their own files</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">/tmp</span>
+<span class="cm"># drwxrwxrwt ... (t at end = sticky bit)</span>
+<span class="cm"># Anyone can write to /tmp but only YOU can delete YOUR files</span>
+<span class="cn">chmod</span> <span class="st">+t</span> <span class="st">shared_dir/</span>        <span class="cm"># set sticky bit</span></code></pre>
+</div>
+
+<!-- S4: Files -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon">📁</div>
+    <div><div class="section-title">Important Files & Directories</div><div class="section-num">Section 04 — Where to find things on a real system</div></div>
+  </div>
+
+  <div class="note note-files">
+    <div class="note-label">📁 Essential Locations — Memorise These</div>
+    <p>These are the directories you'll navigate daily in production. Know them by heart.</p>
+  </div>
+
+  <table>
+    <tr><th>Path</th><th>What's there</th><th>When you need it</th></tr>
+    <tr><td><code>/etc</code></td><td>All system config files</td><td>Configuring services, networking, users</td></tr>
+    <tr><td><code>/etc/passwd</code></td><td>User accounts (no passwords)</td><td>See all users on system</td></tr>
+    <tr><td><code>/etc/shadow</code></td><td>Hashed passwords</td><td>Password policy, account locking</td></tr>
+    <tr><td><code>/etc/fstab</code></td><td>Filesystems to mount at boot</td><td>Adding persistent mounts</td></tr>
+    <tr><td><code>/etc/hosts</code></td><td>Static DNS overrides</td><td>Local hostname resolution</td></tr>
+    <tr><td><code>/var/log</code></td><td>All system and app logs</td><td>Debugging, incident investigation</td></tr>
+    <tr><td><code>/var/log/syslog</code></td><td>General system log</td><td>Most useful first log to check</td></tr>
+    <tr><td><code>/proc</code></td><td>Live kernel/process data</td><td>CPU info, memory, process state</td></tr>
+    <tr><td><code>/proc/cpuinfo</code></td><td>CPU details</td><td><code>cat /proc/cpuinfo</code></td></tr>
+    <tr><td><code>/proc/meminfo</code></td><td>RAM usage breakdown</td><td><code>cat /proc/meminfo</code></td></tr>
+    <tr><td><code>/proc/mounts</code></td><td>Currently mounted filesystems</td><td>Check what's mounted right now</td></tr>
+    <tr><td><code>/dev/null</code></td><td>The black hole — discards everything</td><td><code>cmd &gt; /dev/null</code></td></tr>
+    <tr><td><code>/dev/zero</code></td><td>Infinite stream of zero bytes</td><td>Creating test files, wiping disks</td></tr>
+    <tr><td><code>/dev/random</code></td><td>Cryptographic random bytes</td><td>Key generation</td></tr>
+    <tr><td><code>/tmp</code></td><td>Temporary files (world-writable)</td><td>Scratch space, downloads</td></tr>
+    <tr><td><code>/run</code></td><td>Runtime data (PID files, sockets)</td><td>Service management</td></tr>
+    <tr><td><code>/home/username</code></td><td>User personal files</td><td>User configs, scripts, data</td></tr>
+    <tr><td><code>/root</code></td><td>Root user's home</td><td>Root's scripts and configs</td></tr>
+  </table>
+</div>
+
+<!-- S5: Under the Hood -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon">🔬</div>
+    <div><div class="section-title">Under the Hood</div><div class="section-num">Section 05 — How the filesystem really works</div></div>
+  </div>
+
+  <div class="note note-hood">
+    <div class="note-label">🔬 Under the Hood</div>
+    <p>Understanding the internals explains behaviours that otherwise seem mysterious — like why deleting a file doesn't immediately free disk space, or why you can rename a file while it's being written to.</p>
+  </div>
+
+  <h3>Inodes, data blocks, and the VFS</h3>
+  <p>A filesystem on disk consists of: a <strong>superblock</strong> (filesystem metadata), an <strong>inode table</strong> (one inode per file), and <strong>data blocks</strong> (actual file content). When the kernel opens a file by name, it traverses directory entries to find the inode number, reads the inode for permissions and block locations, then reads the data blocks.</p>
+
+  <pre><code><span class="cm"># An inode contains:</span>
+<span class="cm"># - file type and permissions</span>
+<span class="cm"># - owner UID and GID</span>
+<span class="cm"># - size in bytes</span>
+<span class="cm"># - timestamps: atime (access), mtime (modify content), ctime (change inode)</span>
+<span class="cm"># - hard link count</span>
+<span class="cm"># - pointers to data blocks on disk</span>
+<span class="cm"># What it does NOT contain: the filename!</span>
+
+<span class="cn">stat</span> /etc/hostname
+<span class="cm"># File: /etc/hostname</span>
+<span class="cm"># Size: 8            Blocks: 8          IO Block: 4096   regular file</span>
+<span class="cm"># Device: 802h/2050d   Inode: 131152      Links: 1</span>
+<span class="cm"># Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)</span>
+<span class="cm"># Access: 2024-01-15 09:22:01.000000000 +0000</span>
+<span class="cm"># Modify: 2024-01-15 09:22:01.000000000 +0000</span>
+<span class="cm"># Change: 2024-01-15 09:22:01.000000000 +0000</span></code></pre>
+
+  <h3>Why deleted files don't free space immediately</h3>
+  <p>When you run <code>rm file.txt</code>, the kernel decrements the inode's <strong>hard link count</strong> by 1. If it reaches 0 AND no process has the file open, the inode and data blocks are marked free. But if a process still has the file open (like a log writer), the data stays on disk until that process closes it. This is why <code>df -h</code> still shows a full disk after deleting a log file — the writing process still has it open.</p>
+
+  <pre><code><span class="cm"># Diagnose "disk full but no files found":</span>
+<span class="cn">lsof</span> <span class="st">+L1</span>   <span class="cm"># show open files with zero link count (deleted but still open)</span>
+<span class="cm"># Kill the process OR truncate the file to free space immediately:</span>
+<span class="cn">truncate</span> <span class="fl">-s 0</span> <span class="st">/var/log/myapp.log</span>  <span class="cm"># set file to 0 bytes without restart</span></code></pre>
+
+  <h3>Mount points and the VFS</h3>
+  <p>The <strong>VFS (Virtual Filesystem Switch)</strong> is a kernel abstraction layer. All filesystems — ext4, xfs, btrfs, tmpfs, nfs, proc, sysfs — present the same API to the kernel. You interact with all of them identically. A <strong>mount</strong> operation grafts the root of one filesystem onto a directory in the main tree.</p>
+
+  <pre><code><span class="cn">mount</span>                          <span class="cm"># show all mounted filesystems</span>
+<span class="cn">cat</span> /proc/mounts               <span class="cm"># kernel's live view of mounts</span>
+<span class="cn">findmnt</span>                        <span class="cm"># tree view of mount points (modern, clear)</span>
+
+<span class="cm"># Mount a disk temporarily:</span>
+<span class="cn">mount</span> <span class="st">/dev/sdb1 /mnt/data</span>     <span class="cm"># mount device at /mnt/data</span>
+<span class="cn">umount</span> <span class="st">/mnt/data</span>              <span class="cm"># unmount (fails if in use — "target is busy")</span>
+
+<span class="cm"># Persistent mounts go in /etc/fstab:</span>
+<span class="cm"># /dev/sdb1   /data   ext4   defaults   0   2</span>
+<span class="cm"># device      mount   type   options   dump fsck-order</span></code></pre>
+
+  <h3>Common filesystem types</h3>
+  <table>
+    <tr><th>Filesystem</th><th>Use Case</th><th>Notes</th></tr>
+    <tr><td><code>ext4</code></td><td>Default Linux disk FS</td><td>Reliable, mature, journaled. Most common.</td></tr>
+    <tr><td><code>xfs</code></td><td>Large files, databases</td><td>Default on RHEL/CentOS. High performance.</td></tr>
+    <tr><td><code>btrfs</code></td><td>Snapshots, RAID</td><td>Modern, copy-on-write. Default on OpenSUSE.</td></tr>
+    <tr><td><code>tmpfs</code></td><td>RAM-based temp storage</td><td><code>/tmp</code> and <code>/run</code> are usually tmpfs.</td></tr>
+    <tr><td><code>proc</code></td><td>Process/kernel info</td><td>Virtual — nothing on disk</td></tr>
+    <tr><td><code>sysfs</code></td><td>Kernel/hardware state</td><td>Virtual — mounted at /sys</td></tr>
+    <tr><td><code>nfs</code></td><td>Network file shares</td><td>Remote filesystems mounted locally</td></tr>
+    <tr><td><code>vfat</code></td><td>USB drives, EFI partition</td><td>No Unix permissions — everything is 777</td></tr>
+  </table>
+</div>
+
+<!-- S6: Real World -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon">🏭</div>
+    <div><div class="section-title">Real-World Usage</div><div class="section-num">Section 06 — Daily filesystem tasks in production</div></div>
+  </div>
+
+  <div class="note note-real">
+    <div class="note-label">🏭 Real-World Usage</div>
+    <p>These are tasks a DevOps engineer performs on real servers weekly.</p>
+  </div>
+
+  <h3>Investigating disk space issues</h3>
+  <pre><code><span class="cm"># Step 1: Which filesystem is full?</span>
+<span class="cn">df</span> <span class="fl">-h</span>
+
+<span class="cm"># Step 2: Find which directory is largest</span>
+<span class="cn">du</span> <span class="fl">-d1 -h</span> <span class="st">/var</span> | <span class="cn">sort</span> <span class="fl">-rh</span> | <span class="cn">head</span> <span class="fl">10</span>
+<span class="cn">du</span> <span class="fl">-d1 -h</span> <span class="st">/var/log</span> | <span class="cn">sort</span> <span class="fl">-rh</span> | <span class="cn">head</span> <span class="fl">10</span>
+
+<span class="cm"># Step 3: Find individual large files</span>
+<span class="cn">find</span> <span class="st">/var/log</span> <span class="fl">-type f -size +100M</span>
+
+<span class="cm"># Step 4: Check for deleted-but-open files eating space</span>
+<span class="cn">lsof</span> <span class="st">+L1</span> | <span class="cn">grep</span> <span class="st">deleted</span></code></pre>
+
+  <h3>Setting up a shared directory for a team</h3>
+  <pre><code><span class="cm"># Create shared dir with SetGID so all files get shared group</span>
+<span class="cn">mkdir</span> <span class="st">/opt/project</span>
+<span class="cn">chown</span> <span class="st">root:devteam /opt/project</span>
+<span class="cn">chmod</span> <span class="st">2775</span> <span class="st">/opt/project</span>         <span class="cm"># 2=setgid, 775=rwxrwxr-x</span>
+<span class="cm"># Now any devteam member's new files auto-inherit 'devteam' group</span></code></pre>
+
+  <h3>Deploying apps with correct permissions</h3>
+  <pre><code><span class="cm"># Web app deployment pattern</span>
+<span class="cn">chown</span> <span class="fl">-R</span> <span class="st">www-data:www-data /var/www/myapp</span>
+<span class="cn">find</span> <span class="st">/var/www/myapp</span> <span class="fl">-type d -exec</span> <span class="cn">chmod</span> <span class="st">755</span> <span class="st">{}</span> <span class="st">\;</span>  <span class="cm"># dirs: executable</span>
+<span class="cn">find</span> <span class="st">/var/www/myapp</span> <span class="fl">-type f -exec</span> <span class="cn">chmod</span> <span class="st">644</span> <span class="st">{}</span> <span class="st">\;</span>  <span class="cm"># files: no execute</span>
+<span class="cn">chmod</span> <span class="st">755</span> <span class="st">/var/www/myapp/scripts/*.sh</span>               <span class="cm"># re-add execute to scripts</span></code></pre>
+
+  <h3>Managing log rotation manually</h3>
+  <pre><code><span class="cm"># Rotate a log without restarting the service (zero-downtime)</span>
+<span class="cn">mv</span> <span class="st">/var/log/myapp.log /var/log/myapp.log.$(date +%Y%m%d)</span>
+<span class="cn">gzip</span> <span class="st">/var/log/myapp.log.$(date +%Y%m%d)</span>
+<span class="cn">kill</span> <span class="fl">-HUP</span> <span class="st">$(cat /var/run/myapp.pid)</span>  <span class="cm"># signal app to reopen log file</span></code></pre>
+</div>
+
+<!-- S7: Modern vs Legacy -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon">🔄</div>
+    <div><div class="section-title">Modern vs Legacy Tools</div><div class="section-num">Section 07 — What changed and why it matters</div></div>
+  </div>
+
+  <table>
+    <tr><th>Legacy</th><th>Modern</th><th>Reason to switch</th><th>When to use legacy</th></tr>
+    <tr><td><code>find + rm</code></td><td><code>find -delete</code></td><td>Atomic, no xargs quoting issues</td><td>Complex pipelines</td></tr>
+    <tr><td><code>df / du</code></td><td><code>duf</code>, <code>ncdu</code></td><td>Interactive, coloured, treemap</td><td>Scripts, remote servers</td></tr>
+    <tr><td><code>ls -la</code></td><td><code>eza -la</code></td><td>Git status, icons, color coding</td><td>Always know ls first</td></tr>
+    <tr><td><code>cat</code></td><td><code>bat</code></td><td>Syntax highlight, git diff, line numbers</td><td>Scripts, pipes</td></tr>
+    <tr><td><code>locate</code></td><td><code>fd</code></td><td>Respects .gitignore, faster, sane defaults</td><td>Large filesystem sweeps</td></tr>
+    <tr><td><code>chmod -R 755</code></td><td><code>chmod -R u=rwX,go=rX</code></td><td>Capital X = execute only for dirs, not files</td><td>Simple single files</td></tr>
+  </table>
+
+  <div class="note note-senior">
+    <div class="note-label">💡 Senior Engineer Insight</div>
+    <p>The capital <code>X</code> in <code>chmod</code> is something many miss: <code>chmod -R 755 /dir</code> makes ALL files executable, including config files and images. <code>chmod -R u=rwX,go=rX /dir</code> only sets the execute bit on items that are already directories or already executable. This is the correct pattern for recursive permission setting on web application directories.</p>
+  </div>
+</div>
+
+<!-- S8: Beginner Mistakes -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon">⚠️</div>
+    <div><div class="section-title">Common Beginner Mistakes</div><div class="section-num">Section 08</div></div>
+  </div>
+  <ul>
+    <li><strong>Using <code>chmod 777</code> as a "fix":</strong> When something fails with permission denied, beginners often chmod 777. This creates a security hole. The correct approach is to understand <em>why</em> access is denied and fix the minimal necessary permission.</li>
+    <li><strong>Confusing <code>rm -rf</code> with wildcards:</strong> <code>rm -rf /home/ubuntu/ *</code> (note the space) deletes the directory AND then tries to delete everything in the current directory. No space: <code>rm -rf /home/ubuntu/*</code> deletes contents only.</li>
+    <li><strong>Not using <code>-p</code> with mkdir:</strong> <code>mkdir a/b/c</code> fails if <code>a/b</code> doesn't exist. Use <code>mkdir -p a/b/c</code>.</li>
+    <li><strong>Absolute vs relative confusion with symlinks:</strong> <code>ln -s config.txt link</code> creates a relative symlink — it breaks if you move <code>link</code> to another directory. Use absolute paths in symlinks unless you know what you're doing.</li>
+    <li><strong>Editing files in <code>/tmp</code> as persistent storage:</strong> <code>/tmp</code> is cleared on reboot. Never store anything important there.</li>
+    <li><strong>Ignoring inode exhaustion:</strong> A disk can be "full" with 0 free inodes even with GB of free space. This happens with millions of tiny files (like log entries). Always check both <code>df -h</code> AND <code>df -i</code>.</li>
+  </ul>
+</div>
+
+<!-- S9: Production Mistakes -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon">🏗️</div>
+    <div><div class="section-title">Common Production Mistakes</div><div class="section-num">Section 09</div></div>
+  </div>
+  <ul>
+    <li><strong>Recursive chown/chmod on <code>/</code>:</strong> Running <code>chown -R www-data /</code> instead of <code>chown -R www-data /var/www</code> breaks the entire system. Always double check the path before <code>-R</code>.</li>
+    <li><strong>Breaking SUID on <code>/usr/bin/passwd</code>:</strong> Recursive <code>chmod -R</code> on system directories removes SUID bits. Users lose the ability to change their own passwords. Check with <code>ls -la /usr/bin/passwd</code>.</li>
+    <li><strong>Typo in /etc/fstab:</strong> A bad entry in <code>/etc/fstab</code> prevents the system from booting. Always test with <code>mount -a</code> before rebooting.</li>
+    <li><strong>Not accounting for filesystem type on FAT volumes:</strong> Copying files to a USB drive (vfat) silently drops all Unix permissions, symlinks, and ownership. Files appear to copy fine then cause errors when used.</li>
+    <li><strong>Relying on atime:</strong> Many systems mount with <code>noatime</code> for performance. Don't use file access time as a proxy for "was this file recently used" in production scripts.</li>
+  </ul>
+</div>
+
+<!-- S10: Debug Workflow -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-icon">🛠</div>
+    <div><div class="section-title">Debugging Workflow</div><div class="section-num">Section 10 — Systematic approach to filesystem problems</div></div>
+  </div>
+
+  <div class="note note-debug">
+    <div class="note-label">🛠 Filesystem Troubleshooting Checklist</div>
+    <p>When you hit a filesystem error, work through this order.</p>
+  </div>
+
+  <pre><code><span class="cm"># "Permission denied"</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">thefile</span>            <span class="cm"># who owns it, what permissions?</span>
+<span class="cn">id</span>                        <span class="cm"># what user/groups am I?</span>
+<span class="cn">namei</span> <span class="fl">-l</span> <span class="st">/path/to/file</span>   <span class="cm"># check permissions on EVERY component of path</span>
+<span class="cm"># namei is critical — a parent dir with no execute bit blocks access to children</span>
+
+<span class="cm"># "No space left on device"</span>
+<span class="cn">df</span> <span class="fl">-h</span>                     <span class="cm"># which partition is full?</span>
+<span class="cn">df</span> <span class="fl">-i</span>                     <span class="cm"># also check inodes</span>
+<span class="cn">du</span> <span class="fl">-d1 -h</span> <span class="st">/var</span> | <span class="cn">sort</span> <span class="fl">-rh</span> | <span class="cn">head</span>  <span class="cm"># drill down to culprit</span>
+<span class="cn">lsof</span> <span class="st">+L1</span>                 <span class="cm"># deleted-but-open files</span>
+
+<span class="cm"># "No such file or directory" (but you can see it with ls)</span>
+<span class="cn">file</span> <span class="st">thefile</span>              <span class="cm"># is it a broken symlink?</span>
+<span class="cn">readlink</span> <span class="fl">-f</span> <span class="st">thefile</span>       <span class="cm"># where does the symlink point?</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">thefile</span>            <span class="cm"># check type character (l = symlink)</span>
+
+<span class="cm"># Corrupted filesystem (after crash)</span>
+<span class="cn">dmesg</span> | <span class="cn">grep</span> <span class="fl">-i</span> <span class="st">"error\|fault\|corrupt"</span>   <span class="cm"># check kernel messages</span>
+<span class="cm"># Boot to recovery mode and run:</span>
+<span class="cm"># fsck /dev/sda1  — NEVER run fsck on a mounted partition!</span></code></pre>
+</div>
+
+<!-- S11: Security -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <div class="section-icon">🔐</div>
+    <div><div class="section-title">Security Considerations</div><div class="section-num">Section 11</div></div>
+  </div>
+  <ul>
+    <li><strong>SSH keys must be 600:</strong> <code>~/.ssh/id_rsa</code> (private key) must be <code>-rw-------</code>. OpenSSH refuses to use keys that are world or group readable.</li>
+    <li><strong>World-writable files are a red flag:</strong> <code>find / -perm -002 -not -path "/proc/*" -not -path "/sys/*"</code> finds them. Any file writable by others could be modified by any user.</li>
+    <li><strong>Audit SUID/SGID binaries:</strong> <code>find / -perm /6000 -type f 2>/dev/null</code>. Unexpected SUID binaries are a common privilege escalation vector.</li>
+    <li><strong>The <code>/tmp</code> symlink attack:</strong> Predictable temp file names in world-writable directories can be exploited. Scripts should use <code>mktemp</code> for secure temp file creation.</li>
+    <li><strong>Sensitive files in wrong locations:</strong> Config files with credentials should live in <code>/etc</code> or app config dirs with <code>600</code> or <code>640</code> permissions, not in web-accessible paths.</li>
+  </ul>
+
+  <div class="note note-sec">
+    <div class="note-label">🔐 Security Audit Commands</div>
+    <p><code>find / -perm /4000 -type f 2&gt;/dev/null</code> — find all SUID files. <code>find / -perm -0002 -type f 2&gt;/dev/null</code> — find world-writable files. Run these on any new server as part of your baseline security check.</p>
+  </div>
+</div>
+
+<!-- S12: Performance -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <div class="section-icon">🚀</div>
+    <div><div class="section-title">Performance Considerations</div><div class="section-num">Section 12</div></div>
+  </div>
+  <ul>
+    <li><strong><code>noatime</code> mount option:</strong> By default, reading a file updates its access timestamp — a write on every read. Mount with <code>noatime</code> or <code>relatime</code> in <code>/etc/fstab</code> to eliminate this overhead. Standard on high-traffic servers.</li>
+    <li><strong>Inode count on creation:</strong> If your application creates millions of small files, choose a filesystem with a larger inode table, or use a directory structure to distribute files (e.g., hash-sharded directories).</li>
+    <li><strong><code>find</code> on large trees is slow:</strong> For repeated lookups, <code>locate</code> (pre-indexed) is orders of magnitude faster. For one-off searches, <code>fd</code> is faster than <code>find</code> due to parallel traversal.</li>
+    <li><strong>Disk I/O scheduling:</strong> SSDs benefit from the <code>none</code> or <code>mq-deadline</code> I/O scheduler. HDDs benefit from <code>cfq</code> or <code>bfq</code>. Check with <code>cat /sys/block/sda/queue/scheduler</code>.</li>
+    <li><strong>tmpfs for high-frequency temp files:</strong> If your app writes many small temp files, consider pointing its temp dir to a <code>tmpfs</code> mount (RAM-backed). No disk I/O at all.</li>
+  </ul>
+</div>
+
+<!-- S13: Best Practices -->
+<div class="section" id="s13">
+  <div class="section-header">
+    <div class="section-icon">💡</div>
+    <div><div class="section-title">Best Practices — Senior Level</div><div class="section-num">Section 13</div></div>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about the filesystem</h4>
+    <ul>
+      <li>They always test <code>rm</code> commands with <code>ls</code> first — same flags, same path. Run <code>ls -la /some/path/*.log</code>, verify output, then run <code>rm</code>.</li>
+      <li>They use <code>chmod u=rwX,go=rX</code> instead of blanket <code>chmod -R 755</code> — preserves execute only where appropriate.</li>
+      <li>They never store credentials in world-readable locations. Config files with secrets get <code>chmod 600</code> immediately after creation.</li>
+      <li>They always run <code>mount -a</code> and <code>df -h</code> after editing <code>/etc/fstab</code> — before rebooting.</li>
+      <li>They use <code>namei -l /path</code> when a permission error is confusing — it shows every step of the path resolution.</li>
+      <li>They know that <code>mv</code> within the same filesystem is instant (just updates directory entries). <code>mv</code> across filesystems copies then deletes — can be slow for large files.</li>
+      <li>They check both <code>df -h</code> AND <code>df -i</code> during disk space incidents — both can fill up independently.</li>
+    </ul>
+  </div>
+
+  <pre><code><span class="cm"># Safe recursive permission fix for a web app directory:</span>
+<span class="cn">find</span> <span class="st">/var/www/myapp</span> <span class="fl">-type d -exec</span> <span class="cn">chmod</span> <span class="st">755</span> <span class="st">{}</span> <span class="st">\;</span>
+<span class="cn">find</span> <span class="st">/var/www/myapp</span> <span class="fl">-type f -exec</span> <span class="cn">chmod</span> <span class="st">644</span> <span class="st">{}</span> <span class="st">\;</span>
+<span class="cm"># Handles files and directories separately — much safer than chmod -R 755</span>
+
+<span class="cm"># Verify before rebooting after fstab edit:</span>
+<span class="cn">mount</span> <span class="fl">-a</span> && <span class="cn">df</span> <span class="fl">-h</span> && echo <span class="st">"fstab looks good"</span></code></pre>
+</div>
+
+<!-- S14: Incidents -->
+<div class="section" id="s14">
+  <div class="section-header">
+    <div class="section-icon">🔥</div>
+    <div><div class="section-title">Real Incident Scenarios</div><div class="section-num">Section 14</div></div>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>Disk Full — Service Down at 3am</h4>
+    <p><strong>Alert:</strong> "Database write errors. Service returning 500s."</p>
+    <p><strong>Diagnosis chain:</strong></p>
+    <pre style="margin:8px 0"><code><span class="cn">df</span> <span class="fl">-h</span>            <span class="cm"># /var partition at 100%</span>
+<span class="cn">du</span> <span class="fl">-d1 -h</span> <span class="st">/var</span> | <span class="cn">sort</span> <span class="fl">-rh</span> | <span class="cn">head</span>  <span class="cm"># /var/log is 40GB</span>
+<span class="cn">ls</span> <span class="fl">-lh</span> <span class="st">/var/log/myapp*</span>  <span class="cm"># myapp.log is 38GB — no log rotation configured!</span>
+<span class="cn">lsof</span> <span class="st">+L1</span>          <span class="cm"># no deleted files open</span></code></pre>
+    <p><strong>Immediate fix:</strong> <code>truncate -s 0 /var/log/myapp.log</code> — zeroes the file without restart. Service recovers.</p>
+    <p><strong>Root cause:</strong> Application logging at DEBUG level in production with no log rotation configured.</p>
+    <p><strong>Permanent fix:</strong> Configure <code>logrotate</code> for the app. Set log level to INFO in production. Add disk space alerting at 80%.</p>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>Permission Denied After Deployment</h4>
+    <p><strong>Symptom:</strong> New deployment works on staging, fails on prod with permission denied on config file.</p>
+    <p><strong>Investigation:</strong></p>
+    <pre style="margin:8px 0"><code><span class="cn">namei</span> <span class="fl">-l</span> <span class="st">/etc/myapp/config.json</span>
+<span class="cm"># drwxr-xr-x root   root /</span>
+<span class="cm"># drwxr-xr-x root   root etc</span>
+<span class="cm"># drwx------ root   root myapp   ← PROBLEM: directory is 700, not 750</span>
+<span class="cm"># -rw-r----- root   myapp config.json</span></code></pre>
+    <p><strong>Fix:</strong> <code>chmod 750 /etc/myapp</code> — the app user is in the <code>myapp</code> group but the directory had no group execute bit.</p>
+    <p><strong>Lesson:</strong> Always use <code>namei -l</code> for permission debugging. The problem is often a parent directory, not the file itself.</p>
+  </div>
+</div>
+
+<!-- S15: Labs -->
+<div class="section" id="s15">
+  <div class="section-header">
+    <div class="section-icon">🧪</div>
+    <div><div class="section-title">Hands-On Labs</div><div class="section-num">Section 15</div></div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge beginner">BEGINNER</span><span class="lab-title">Lab 1 — FHS Exploration & Basic File Ops</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Run <code>ls /</code> and for each directory, state its purpose from memory. Check yourself with the FHS table above.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Create this structure: <code>mkdir -p ~/practice/alpha/{docs,scripts,logs}</code>. Verify with <code>tree ~/practice</code> (or <code>find ~/practice</code>).</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Create 5 test files: <code>touch ~/practice/alpha/docs/file{1..5}.txt</code></span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Copy the docs directory recursively: <code>cp -r ~/practice/alpha/docs ~/practice/alpha/docs_backup</code></span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Move file3.txt to the logs directory. Delete file5.txt safely (use <code>ls</code> to preview path first).</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Run <code>ls -la ~/practice/alpha/docs/</code> and read every field of the output aloud.</span></div>
+      <div class="lab-step"><span class="step-num">7</span><span>Find all .txt files under ~/practice: <code>find ~/practice -name "*.txt"</code></span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge intermediate">INTERMEDIATE</span><span class="lab-title">Lab 2 — Permissions & Links Deep Dive</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Create a file and set it to 644: <code>touch secret.sh && chmod 644 secret.sh</code>. Try to execute it (<code>./secret.sh</code>). Observe the error. Fix with <code>chmod u+x</code>.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Create a hard link and verify same inode: <code>ln secret.sh secret_hard.sh && ls -li secret.sh secret_hard.sh</code></span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Create a symbolic link: <code>ln -s ~/practice/alpha/docs ~/practice/docs_link</code>. Navigate through the symlink. Delete the target and observe the broken link.</span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Practice octal permissions: create three files with chmod 400, 644, 755. Explain each using rwx notation. Verify with <code>ls -la</code>.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Use <code>stat</code> on a file and read every output field. Find the inode number, all three timestamps, and link count.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Set up a shared directory with SetGID: create a dir, set permissions 2775, chown to your user and a group you're in. Create a file inside and verify it inherits the group.</span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge advanced">ADVANCED</span><span class="lab-title">Lab 3 — Production Filesystem Investigation</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Simulate disk space issue: create a 500MB test file (<code>dd if=/dev/zero of=/tmp/bigfile bs=1M count=500</code>). Check df -h. Then delete and verify space returned.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Investigate inode usage: create 10,000 tiny files (<code>mkdir /tmp/inodetest && for i in {1..10000}; do touch /tmp/inodetest/$i; done</code>). Check <code>df -i</code> vs <code>df -h</code>.</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Use <code>find</code> with <code>-exec</code>: find all files in /etc modified in the last 7 days: <code>find /etc -mtime -7 -type f 2>/dev/null</code></span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Use <code>namei -l</code> to trace permission chain: <code>namei -l /var/log/syslog</code>. Explain each line.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Find and audit SUID files: <code>find /usr/bin -perm /4000 -type f</code>. Look up 3 results to understand why they need SUID.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- S16: Break & Fix -->
+<div class="section" id="s16">
+  <div class="section-header">
+    <div class="section-icon">💣</div>
+    <div><div class="section-title">Break It & Fix It</div><div class="section-num">Section 16</div></div>
+  </div>
+  <div class="note note-break">
+    <div class="note-label">🧪 Break It & Fix It</div>
+    <p>Safe, recoverable exercises. All damage is to files in <code>~/practice</code> only.</p>
+  </div>
+  <ul>
+    <li><strong>Break 1 — Remove execute bit from a script:</strong> <code>chmod a-x ~/practice/alpha/scripts/test.sh</code>. Try to run it. Fix it. Now do it from a different user perspective.</li>
+    <li><strong>Break 2 — Create a broken symlink:</strong> <code>ln -s /nonexistent/path ~/practice/broken_link</code>. Observe what <code>ls -la</code> shows. Use <code>file ~/practice/broken_link</code>. Fix it by pointing it somewhere real.</li>
+    <li><strong>Break 3 — Fill inodes:</strong> In a subdirectory, create thousands of tiny files until <code>df -i</code> shows the test partition near full. Observe what happens when you try to create more files. Clean up with <code>rm -rf</code>.</li>
+    <li><strong>Break 4 — Wrong chown:</strong> Create a file as your user. <code>sudo chown root:root ~/practice/rootfile.txt</code>. Try to write to it as your user. Observe the error. Use sudo to restore ownership.</li>
+    <li><strong>Break 5 — The spaces-in-path trap:</strong> <code>mkdir "/tmp/test dir"</code> (with a space). Run <code>rm -rf /tmp/test dir</code> (without quotes). What happened? Understand the danger. Always quote paths with spaces.</li>
+  </ul>
+</div>
+
+<!-- S17: Mini Project -->
+<div class="section" id="s17">
+  <div class="section-header">
+    <div class="section-icon">🎯</div>
+    <div><div class="section-title">Mini Project</div><div class="section-num">Section 17</div></div>
+  </div>
+  <div class="capstone-box">
+    <h4 style="font-size:16px; font-weight:700; color:var(--accent2); margin-bottom:10px;">🎯 Mini Project: Filesystem Audit Script</h4>
+    <p>Write a script called <code>fs_audit.sh</code> that performs a filesystem health and security snapshot. It must:</p>
+    <ul>
+      <li>Report disk usage for each mounted filesystem (<code>df -h</code>)</li>
+      <li>Report inode usage (<code>df -i</code>)</li>
+      <li>Find the top 10 largest files under <code>/var</code></li>
+      <li>Find world-writable files not in <code>/proc</code> or <code>/sys</code></li>
+      <li>Find all SUID/SGID binaries in <code>/usr/bin</code></li>
+      <li>Check for broken symlinks in <code>/etc</code></li>
+      <li>Save all output to <code>/tmp/fs_audit_$(date +%Y%m%d).txt</code></li>
+      <li>Print a one-line summary at the end: "Audit complete. Report at /tmp/fs_audit_..."</li>
+    </ul>
+    <p>Bonus: colour-code warnings (disk &gt;80% full, world-writable files found) in the terminal output.</p>
+  </div>
+</div>
+
+<!-- S18: Capstone -->
+<div class="section" id="s18">
+  <div class="section-header">
+    <div class="section-icon">🏆</div>
+    <div><div class="section-title">Capstone Connection</div><div class="section-num">Section 18</div></div>
+  </div>
+  <p>The Phase 1 capstone (<code>sysreport.sh</code>) uses filesystem skills heavily:</p>
+  <ul>
+    <li>Disk space check → <code>df -h</code> with threshold comparison</li>
+    <li>Log file append → <code>>></code> to <code>/var/log/sysreport.log</code></li>
+    <li>Checking if packages are installed → <code>find /usr/bin</code> or <code>which</code></li>
+    <li>Finding large files → <code>find /var/log -size +50M</code></li>
+    <li>File permission for the log → <code>chmod 640 /var/log/sysreport.log</code></li>
+  </ul>
+</div>
+
+<!-- S19: Interview Questions -->
+<div class="section" id="s19">
+  <div class="section-header">
+    <div class="section-icon">❓</div>
+    <div><div class="section-title">Interview Questions</div><div class="section-num">Section 19 — Junior to Senior</div></div>
+  </div>
+
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is the purpose of the <code>/etc</code> directory? Name 5 important files in it.</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">Explain the meaning of the permission string <code>-rwxr-xr--</code> in octal.</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is the difference between a hard link and a symbolic link?</div><div class="iq-hint">Hint: inodes, cross-filesystem, directory linking</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What does <code>chmod 755 script.sh</code> mean? What does each digit represent?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">What is an inode? What information does it store? What does it NOT store?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">A disk shows 100% full but <code>find</code> can't locate large files. What might cause this and how do you fix it?</div><div class="iq-hint">Hint: deleted-but-open files, lsof +L1, truncate</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">What is the SetUID bit? Give a real example of why it is needed on a production system.</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">Explain the difference between <code>/proc</code> and <code>/sys</code>. Are they real filesystems on disk?</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">Your application has a permission denied error on a config file, but the file has the correct permissions. How do you diagnose this?</div><div class="iq-hint">Hint: namei -l, parent directory permissions, ACLs</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">Explain inode exhaustion. How does it happen, how do you detect it, how do you prevent it in a system that generates many small files?</div></div>
+
+  <hr class="divider">
+  <h3>Self-test questions</h3>
+  <ol>
+    <li>What directory stores system configuration files? What about user home directories?</li>
+    <li>A file is owned by root with permissions 640. Can a member of the file's group read it?</li>
+    <li>What is the sticky bit on <code>/tmp</code> for?</li>
+    <li>What command shows the full resolved path of a symlink?</li>
+    <li>You run <code>rm bigfile.log</code> but <code>df -h</code> still shows the same disk usage. Why?</li>
+    <li>What does <code>find /etc -mtime -3 -type f</code> find?</li>
+    <li>What is the difference between <code>du</code> and <code>df</code>?</li>
+    <li>What does <code>namei -l /path/to/file</code> do and when do you use it?</li>
+    <li>Why should you never run <code>chmod -R 777</code> on a web application directory?</li>
+    <li>What is the purpose of <code>/dev/null</code> and <code>/dev/zero</code>?</li>
+  </ol>
+</div>
+
+<!-- S20: Cheat Sheet -->
+<div class="section" id="s20">
+  <div class="section-header">
+    <div class="section-icon">📝</div>
+    <div><div class="section-title">Cheat Sheet & Revision Summary</div><div class="section-num">Section 20</div></div>
+  </div>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>File Operations</h4>
+      <div class="cheat-row"><span class="cheat-cmd">touch file</span><span class="cheat-desc">create empty file</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">mkdir -p a/b/c</span><span class="cheat-desc">create path</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">cp -a src/ dst/</span><span class="cheat-desc">archive copy</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">mv -i src dst</span><span class="cheat-desc">move (ask overwrite)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">rm -rf dir/</span><span class="cheat-desc">force delete (careful!)</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Permissions</h4>
+      <div class="cheat-row"><span class="cheat-cmd">chmod 755 file</span><span class="cheat-desc">rwxr-xr-x</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">chmod u+x file</span><span class="cheat-desc">add execute to owner</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">chown user:grp f</span><span class="cheat-desc">change owner+group</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">chmod 2755 dir/</span><span class="cheat-desc">setgid directory</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">namei -l /path</span><span class="cheat-desc">trace perm chain</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Find & Search</h4>
+      <div class="cheat-row"><span class="cheat-cmd">find / -name f</span><span class="cheat-desc">find by name</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">find / -size +100M</span><span class="cheat-desc">find large files</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">find / -perm /4000</span><span class="cheat-desc">find SUID files</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">find / -mtime -1</span><span class="cheat-desc">modified today</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">locate filename</span><span class="cheat-desc">fast index search</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Disk & Space</h4>
+      <div class="cheat-row"><span class="cheat-cmd">df -h</span><span class="cheat-desc">disk free (human)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">df -i</span><span class="cheat-desc">inode usage</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">du -sh /path</span><span class="cheat-desc">dir total size</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">du -d1 -h /var</span><span class="cheat-desc">breakdown by child</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">lsof +L1</span><span class="cheat-desc">deleted open files</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Links</h4>
+      <div class="cheat-row"><span class="cheat-cmd">ln src dst</span><span class="cheat-desc">hard link</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">ln -s target link</span><span class="cheat-desc">symbolic link</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">readlink -f link</span><span class="cheat-desc">resolve full path</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">find / -xtype l</span><span class="cheat-desc">broken symlinks</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">ls -li file</span><span class="cheat-desc">show inode number</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Octal Quick Ref</h4>
+      <div class="cheat-row"><span class="cheat-cmd">600</span><span class="cheat-desc">rw------- (SSH keys)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">644</span><span class="cheat-desc">rw-r--r-- (config)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">755</span><span class="cheat-desc">rwxr-xr-x (scripts)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">700</span><span class="cheat-desc">rwx------ (private)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">2775</span><span class="cheat-desc">setgid shared dir</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Key Directories</h4>
+      <div class="cheat-row"><span class="cheat-cmd">/etc</span><span class="cheat-desc">all config files</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/var/log</span><span class="cheat-desc">logs</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/proc</span><span class="cheat-desc">kernel/process info</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/dev</span><span class="cheat-desc">device files</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/tmp</span><span class="cheat-desc">temp (cleared on reboot)</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Mount & Filesystem</h4>
+      <div class="cheat-row"><span class="cheat-cmd">findmnt</span><span class="cheat-desc">tree of mounts</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">mount -a</span><span class="cheat-desc">apply /etc/fstab</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">stat file</span><span class="cheat-desc">full inode info</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">file file</span><span class="cheat-desc">detect file type</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">truncate -s 0 f</span><span class="cheat-desc">zero a file safely</span></div>
+    </div>
+  </div>
+
+  <div class="recap" style="margin-top:24px;">
+    <h4>📝 One-Day Revision Plan</h4>
+    <ul>
+      <li><strong style="color:var(--accent);">15 min</strong> — Redraw the FHS tree from memory. Check against the section 2 tree.</li>
+      <li><strong style="color:var(--accent);">20 min</strong> — Do Lab 2 (permissions + links) from scratch, no notes.</li>
+      <li><strong style="color:var(--accent);">15 min</strong> — Convert 5 permission strings to octal and back. Use no reference.</li>
+      <li><strong style="color:var(--accent);">10 min</strong> — Answer the 10 self-test questions. Mark any you hesitate on.</li>
+    </ul>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about the filesystem</h4>
+    <p style="color:var(--text2); font-size:14px; line-height:1.75;">The filesystem is not just storage — it is the OS's interface. Senior engineers know that <strong style="color:var(--text)">/proc and /sys are the kernel speaking to you</strong> in real time. They reach for <code>namei -l</code> before assuming a permission is wrong. They always run <code>df -i</code> alongside <code>df -h</code>. They know that <code>mv</code> within one partition is atomic (a rename syscall), making it safe for deployment swaps, while <code>mv</code> across partitions is a copy+delete that can leave partial files on crash. They design application directories defensively — correct minimal permissions, SetGID for shared team directories, no world-writable paths. And they never, ever run a recursive operation without checking the path first.</p>
+  </div>
+</div>
+
+</main>
+</div>
+
+<button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<script>
+  const navIds = ['overview','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20'];
+
+  function updateNav() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('prog-label').textContent = pct + '% read';
+
+    let current = 'overview';
+    for (const id of navIds) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 120) current = id;
+    }
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.toggle('active', item.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', updateNav);
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      this.classList.add('active');
+      const sidebar = document.querySelector('.sidebar');
+      const itemTop = this.offsetTop;
+      const sidebarHeight = sidebar.clientHeight;
+      if (itemTop > sidebar.scrollTop + sidebarHeight - 80 || itemTop < sidebar.scrollTop + 60) {
+        sidebar.scrollTop = itemTop - sidebarHeight / 2;
+      }
+    });
+  });
+
+  updateNav();
+</script>
+</body>
+</html>

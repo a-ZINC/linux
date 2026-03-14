@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T1 — Shell Basics | Phase 1 Linux Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f11;
+    --surface: #15171a;
+    --surface2: #1c1f23;
+    --surface3: #23272d;
+    --border: #2a2e35;
+    --border2: #363c45;
+    --text: #e8eaed;
+    --text2: #9aa0ab;
+    --text3: #5f666f;
+    --accent: #4fffb0;
+    --accent2: #00d4ff;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --accent5: #c084fc;
+    --accent6: #fb923c;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    background: rgba(79,255,176,0.12);
+    color: var(--accent);
+    border-radius: 4px;
+    border: 1px solid rgba(79,255,176,0.25);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .sidebar-header p {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 16px 16px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    font-size: 12.5px;
+    color: var(--text2);
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,255,176,0.05); }
+
+  .nav-icon { font-size: 13px; width: 16px; flex-shrink: 0; }
+
+  .progress-bar {
+    margin: 16px;
+    background: var(--surface3);
+    border-radius: 4px;
+    height: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin: 0 16px 16px;
+  }
+
+  /* Main Content */
+  .main {
+    margin-left: 260px;
+    flex: 1;
+    max-width: 900px;
+    padding: 40px 48px;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topic-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .meta-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  .outcomes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .outcome-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text2);
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .outcome-item::before {
+    content: '✓';
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 1px;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 56px;
+    scroll-margin-top: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .section-icon {
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin: 20px 0 8px;
+    font-family: var(--mono);
+  }
+
+  p { color: var(--text2); line-height: 1.75; margin-bottom: 12px; }
+  p strong { color: var(--text); font-weight: 600; }
+
+  /* Note Blocks */
+  .note {
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 16px 0;
+    border-left: 3px solid;
+  }
+
+  .note-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+
+  .note p { margin: 0; font-size: 14px; }
+
+  .note-mental { background: rgba(79,255,176,0.06); border-color: var(--accent); }
+  .note-mental .note-label { color: var(--accent); }
+
+  .note-cmd { background: rgba(0,212,255,0.06); border-color: var(--accent2); }
+  .note-cmd .note-label { color: var(--accent2); }
+
+  .note-files { background: rgba(251,146,60,0.06); border-color: var(--accent6); }
+  .note-files .note-label { color: var(--accent6); }
+
+  .note-hood { background: rgba(192,132,252,0.06); border-color: var(--accent5); }
+  .note-hood .note-label { color: var(--accent5); }
+
+  .note-real { background: rgba(34,197,94,0.06); border-color: var(--green); }
+  .note-real .note-label { color: var(--green); }
+
+  .note-warn { background: rgba(239,68,68,0.06); border-color: var(--red); }
+  .note-warn .note-label { color: var(--red); }
+
+  .note-debug { background: rgba(245,158,11,0.06); border-color: var(--yellow); }
+  .note-debug .note-label { color: var(--yellow); }
+
+  .note-sec { background: rgba(239,68,68,0.08); border-color: #ff4444; }
+  .note-sec .note-label { color: #ff4444; }
+
+  .note-perf { background: rgba(0,212,255,0.06); border-color: #00b4d8; }
+  .note-perf .note-label { color: #00b4d8; }
+
+  .note-senior { background: rgba(192,132,252,0.08); border-color: var(--accent5); }
+  .note-senior .note-label { color: var(--accent5); }
+
+  .note-try { background: rgba(79,255,176,0.06); border-color: var(--accent); }
+  .note-try .note-label { color: var(--accent); }
+
+  .note-break { background: rgba(255,107,107,0.06); border-color: var(--accent3); }
+  .note-break .note-label { color: var(--accent3); }
+
+  /* Code blocks */
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--surface3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent2);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+  }
+
+  .comment { color: var(--text3); }
+  .cmd-name { color: var(--accent); }
+  .flag { color: var(--accent4); }
+  .string { color: var(--green); }
+  .output { color: var(--text2); }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+
+  td {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+
+  td code { font-size: 12px; }
+  tr:hover td { background: var(--surface2); }
+
+  /* Lists */
+  ul, ol {
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+
+  li {
+    color: var(--text2);
+    margin-bottom: 6px;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  li strong { color: var(--text); }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  /* Quiz */
+  .quiz-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0;
+  }
+
+  .quiz-q {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 6px; }
+
+  .quiz-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface3);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .quiz-opt:hover { border-color: var(--border2); color: var(--text); }
+  .quiz-opt.correct { background: rgba(34,197,94,0.1); border-color: var(--green); color: var(--green); }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.1); border-color: var(--red); color: var(--red); }
+
+  .quiz-opt-key {
+    font-family: var(--mono);
+    font-size: 11px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border-radius: 4px;
+    flex-shrink: 0;
+    color: var(--text3);
+  }
+
+  /* Cheat sheet */
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .cheat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .cheat-card h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .cheat-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    margin-bottom: 5px;
+    font-size: 13px;
+  }
+
+  .cheat-cmd {
+    font-family: var(--mono);
+    color: var(--accent2);
+    flex-shrink: 0;
+    min-width: 130px;
+    font-size: 12px;
+  }
+
+  .cheat-desc { color: var(--text3); font-size: 12px; }
+
+  /* Interview questions */
+  .iq-item {
+    border-left: 2px solid var(--border2);
+    padding: 10px 16px;
+    margin: 8px 0;
+    transition: border-color 0.15s;
+  }
+
+  .iq-item:hover { border-left-color: var(--accent); }
+
+  .iq-level {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .level-jr { color: var(--green); }
+  .level-mid { color: var(--yellow); }
+  .level-sr { color: var(--accent3); }
+
+  .iq-q { font-size: 14px; color: var(--text); font-weight: 500; }
+
+  .iq-hint {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* Lab blocks */
+  .lab-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .lab-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lab-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .lab-badge.beginner { background: rgba(34,197,94,0.15); color: var(--green); }
+  .lab-badge.intermediate { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .lab-badge.advanced { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .lab-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .lab-body { padding: 14px 16px; }
+
+  .lab-step {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    font-size: 13.5px;
+    color: var(--text2);
+  }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+    color: var(--accent);
+    margin-top: 1px;
+  }
+
+  /* Incident block */
+  .incident {
+    background: rgba(239,68,68,0.04);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .incident-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .incident h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  /* Recap box */
+  .recap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .recap h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* Senior block */
+  .senior-block {
+    background: linear-gradient(135deg, rgba(192,132,252,0.06) 0%, rgba(79,255,176,0.04) 100%);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+
+  .senior-block h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent5);
+    margin-bottom: 10px;
+  }
+
+  /* TOC scroll spy */
+  .toc-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-left: auto;
+  }
+
+  /* Mobile toggle */
+  .mob-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 200;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+
+  @media (max-width: 800px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 24px 20px; }
+    .mob-toggle { display: flex; align-items: center; justify-content: center; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="phase-badge">PHASE 1 · TOPIC 1</span>
+      <h1>Shell Basics</h1>
+      <p>Linux Mastery Curriculum</p>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+    <div class="progress-label" id="prog-label">0% read</div>
+
+    <div class="nav-section-label">Foundations</div>
+    <a class="nav-item" href="#overview"><span class="nav-icon">▶</span>Overview & Outcomes</a>
+    <a class="nav-item" href="#s1"><span class="nav-icon">🧠</span>Beginner Intuition</a>
+    <a class="nav-item" href="#s2"><span class="nav-icon">📖</span>Core Fundamentals</a>
+    <a class="nav-item" href="#s3"><span class="nav-icon">⚙️</span>Commands & Syntax</a>
+    <a class="nav-item" href="#s4"><span class="nav-icon">📁</span>Files & Configs</a>
+    <a class="nav-item" href="#s5"><span class="nav-icon">🔬</span>Under the Hood</a>
+
+    <div class="nav-section-label">Practical</div>
+    <a class="nav-item" href="#s6"><span class="nav-icon">🏭</span>Real-World Usage</a>
+    <a class="nav-item" href="#s7"><span class="nav-icon">🔄</span>Modern vs Legacy</a>
+    <a class="nav-item" href="#s8"><span class="nav-icon">⚠️</span>Beginner Mistakes</a>
+    <a class="nav-item" href="#s9"><span class="nav-icon">🏗️</span>Production Mistakes</a>
+    <a class="nav-item" href="#s10"><span class="nav-icon">🛠</span>Debug Workflow</a>
+
+    <div class="nav-section-label">Senior Level</div>
+    <a class="nav-item" href="#s11"><span class="nav-icon">🔐</span>Security</a>
+    <a class="nav-item" href="#s12"><span class="nav-icon">🚀</span>Performance</a>
+    <a class="nav-item" href="#s13"><span class="nav-icon">💡</span>Best Practices</a>
+    <a class="nav-item" href="#s14"><span class="nav-icon">🔥</span>Incident Scenarios</a>
+
+    <div class="nav-section-label">Labs & Review</div>
+    <a class="nav-item" href="#s15"><span class="nav-icon">🧪</span>Hands-On Labs</a>
+    <a class="nav-item" href="#s16"><span class="nav-icon">💣</span>Break & Fix</a>
+    <a class="nav-item" href="#s17"><span class="nav-icon">🎯</span>Mini Project</a>
+    <a class="nav-item" href="#s18"><span class="nav-icon">🏆</span>Capstone Connection</a>
+    <a class="nav-item" href="#s19"><span class="nav-icon">❓</span>Interview Questions</a>
+    <a class="nav-item" href="#s20"><span class="nav-icon">📝</span>Cheat Sheet</a>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero" id="overview">
+      <span class="topic-tag">PHASE 1 · TOPIC 1 OF 8 · EST. 3–4 HOURS</span>
+      <h1>Shell <span>Basics</span></h1>
+      <div class="hero-meta">
+        <div class="meta-chip"><div class="dot"></div>3–4 hours study</div>
+        <div class="meta-chip"><div class="dot" style="background:var(--accent2)"></div>Beginner → Senior</div>
+        <div class="meta-chip"><div class="dot" style="background:var(--accent4)"></div>Ubuntu 22.04 LTS</div>
+        <div class="meta-chip"><div class="dot" style="background:var(--accent5)"></div>Prerequisites: None</div>
+      </div>
+      <p class="hero-desc">The shell is your primary interface with Linux. Everything — from deploying code to debugging production systems — happens through commands in a shell. This topic converts you from mouse-dependent to terminal-native.</p>
+
+      <div class="outcomes-grid">
+        <div class="outcome-item">Explain what a shell is and how it differs from the terminal</div>
+        <div class="outcome-item">Navigate the Linux filesystem using shell commands</div>
+        <div class="outcome-item">Use input/output redirection and pipes fluently</div>
+        <div class="outcome-item">Understand command history, tab completion, and shortcuts</div>
+        <div class="outcome-item">Know the difference between bash, sh, zsh, and fish</div>
+        <div class="outcome-item">Use environment variables and understand shell startup files</div>
+        <div class="outcome-item">Combine commands to build simple pipelines</div>
+        <div class="outcome-item">Debug common shell errors confidently</div>
+      </div>
+    </div>
+
+    <!-- S1: Beginner Intuition -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-icon">🧠</div>
+        <div>
+          <div class="section-title">Beginner Intuition</div>
+          <div class="section-num">Section 01 — Simple Mental Model</div>
+        </div>
+      </div>
+
+      <div class="note note-mental">
+        <div class="note-label">🧠 Mental Model</div>
+        <p>Think of the shell as a <strong>very obedient assistant</strong> who only speaks text. You type a sentence (command), it reads it, runs off, does the task, and reports back in text. The <strong>terminal</strong> is the window you open to talk to this assistant. The <strong>shell</strong> is the assistant itself — the program interpreting your words.</p>
+      </div>
+
+      <p>Imagine your computer is a city. The <strong>kernel</strong> is the city's infrastructure — roads, electricity, water. The <strong>shell</strong> is the city hall interface where citizens (you) make requests: "give me this file", "run this program", "tell me who's logged in". The city processes those requests and gives you back a report.</p>
+
+      <p>When you open a terminal, the shell starts and immediately shows you a <strong>prompt</strong> — that blinking cursor waiting for your input. Everything you type after that prompt is a command.</p>
+
+      <pre><code><span class="output">ubuntu@myserver:~$</span> <span class="cmd-name">ls</span>
+<span class="output">Documents  Downloads  Music  Pictures</span>
+
+<span class="comment"># Breakdown of the prompt:
+# ubuntu     = your username
+# myserver   = the machine's hostname
+# ~          = your current directory (~ = home directory)
+# $          = you are a regular user (# means root/superuser)</span></code></pre>
+
+      <div class="note note-try">
+        <div class="note-label">✅ Try It Now</div>
+        <p>Open your terminal right now. Look at the prompt. Can you identify your username, hostname, and current directory? Type <code>whoami</code> and press Enter. What did it print?</p>
+      </div>
+    </div>
+
+    <!-- S2: Core Fundamentals -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-icon">📖</div>
+        <div>
+          <div class="section-title">Core Fundamentals</div>
+          <div class="section-num">Section 02 — The building blocks</div>
+        </div>
+      </div>
+
+      <h3>What is a shell?</h3>
+      <p>A shell is a <strong>command interpreter</strong> — a program that reads your text input, interprets it as commands, executes them by talking to the OS kernel, and returns results as text output. Every Linux system has at least one shell.</p>
+
+      <table>
+        <tr><th>Shell</th><th>Full Name</th><th>Default On</th><th>Key Feature</th></tr>
+        <tr><td><code>bash</code></td><td>Bourne Again Shell</td><td>Ubuntu, Debian</td><td>Most common. Scripting standard.</td></tr>
+        <tr><td><code>sh</code></td><td>POSIX Shell</td><td>All Unix</td><td>Minimal, portable scripts</td></tr>
+        <tr><td><code>zsh</code></td><td>Z Shell</td><td>macOS (default)</td><td>Better autocomplete, plugins</td></tr>
+        <tr><td><code>fish</code></td><td>Friendly Interactive Shell</td><td>Optional install</td><td>User-friendly, syntax highlighting</td></tr>
+        <tr><td><code>dash</code></td><td>Debian Almquist Shell</td><td>Ubuntu (as /bin/sh)</td><td>Tiny, fast — used for boot scripts</td></tr>
+      </table>
+
+      <div class="note note-mental">
+        <div class="note-label">🧠 Mental Model — Shell vs Terminal</div>
+        <p><strong>Terminal</strong> = the glass window/app (gnome-terminal, iTerm, xterm, PuTTY). <strong>Shell</strong> = the program running <em>inside</em> that window interpreting your commands. You can run a different shell inside any terminal.</p>
+      </div>
+
+      <h3>Anatomy of a command</h3>
+      <p>Every command follows this basic structure:</p>
+
+      <pre><code><span class="cmd-name">command</span> <span class="flag">-options</span> <span class="string">argument1 argument2</span>
+
+<span class="comment"># Real example:</span>
+<span class="cmd-name">ls</span> <span class="flag">-la</span> <span class="string">/home/ubuntu</span>
+
+<span class="comment"># ls     = the command (list files)
+# -la    = options: -l (long format) + -a (show hidden files)
+# /home/ubuntu = argument (which directory to list)</span></code></pre>
+
+      <h3>How the shell finds commands</h3>
+      <p>When you type <code>ls</code>, the shell doesn't magically know where <code>ls</code> lives. It searches through a list of directories called the <strong>PATH</strong>. First match wins.</p>
+
+      <pre><code><span class="cmd-name">echo</span> <span class="string">$PATH</span>
+<span class="output">/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span>
+
+<span class="comment"># The shell checks each directory left to right
+# The first 'ls' it finds in those directories is what runs</span>
+
+<span class="cmd-name">which</span> <span class="string">ls</span>
+<span class="output">/usr/bin/ls</span>
+
+<span class="comment"># which tells you exactly which file will run</span></code></pre>
+
+      <h3>Types of commands</h3>
+      <table>
+        <tr><th>Type</th><th>What it is</th><th>Example</th></tr>
+        <tr><td>Built-in</td><td>Part of the shell itself — no file needed</td><td><code>cd</code>, <code>echo</code>, <code>export</code>, <code>alias</code></td></tr>
+        <tr><td>External</td><td>A binary file on disk, found via PATH</td><td><code>ls</code>, <code>grep</code>, <code>curl</code></td></tr>
+        <tr><td>Alias</td><td>A shortcut you define</td><td><code>alias ll='ls -la'</code></td></tr>
+        <tr><td>Function</td><td>A named block of shell code</td><td>Defined in scripts or <code>.bashrc</code></td></tr>
+      </table>
+
+      <pre><code><span class="cmd-name">type</span> <span class="string">cd</span>
+<span class="output">cd is a shell builtin</span>
+
+<span class="cmd-name">type</span> <span class="string">ls</span>
+<span class="output">ls is /usr/bin/ls</span>
+
+<span class="cmd-name">type</span> <span class="string">ll</span>
+<span class="output">ll is aliased to 'ls -la'</span></code></pre>
+    </div>
+
+    <!-- S3: Commands -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <div>
+          <div class="section-title">Commands & Syntax</div>
+          <div class="section-num">Section 03 — Essential shell commands and operators</div>
+        </div>
+      </div>
+
+      <h3>Navigation</h3>
+      <pre><code><span class="cmd-name">pwd</span>                    <span class="comment"># print working directory — where am I?</span>
+<span class="output">/home/ubuntu</span>
+
+<span class="cmd-name">cd</span> <span class="string">/etc</span>               <span class="comment"># change to /etc directory (absolute path)</span>
+<span class="cmd-name">cd</span> <span class="string">Documents</span>          <span class="comment"># change to Documents (relative to current dir)</span>
+<span class="cmd-name">cd</span> <span class="string">..</span>                  <span class="comment"># go up one directory</span>
+<span class="cmd-name">cd</span> <span class="string">../..</span>              <span class="comment"># go up two directories</span>
+<span class="cmd-name">cd</span> <span class="string">~</span>                   <span class="comment"># go to your home directory</span>
+<span class="cmd-name">cd</span> <span class="string">-</span>                   <span class="comment"># go back to previous directory (very useful!)</span>
+<span class="cmd-name">cd</span>                     <span class="comment"># cd with no argument = go home</span></code></pre>
+
+      <h3>Listing files</h3>
+      <pre><code><span class="cmd-name">ls</span>                     <span class="comment"># list files in current directory</span>
+<span class="cmd-name">ls</span> <span class="flag">-l</span>                  <span class="comment"># long format: permissions, owner, size, date</span>
+<span class="cmd-name">ls</span> <span class="flag">-a</span>                  <span class="comment"># show hidden files (starting with .)</span>
+<span class="cmd-name">ls</span> <span class="flag">-la</span>                 <span class="comment"># both: long format + hidden</span>
+<span class="cmd-name">ls</span> <span class="flag">-lh</span>                 <span class="comment"># human-readable sizes (KB, MB, GB)</span>
+<span class="cmd-name">ls</span> <span class="flag">-lt</span>                 <span class="comment"># sort by modification time (newest first)</span>
+<span class="cmd-name">ls</span> <span class="flag">-ltr</span>                <span class="comment"># sort by time, reverse (oldest first)</span>
+<span class="cmd-name">ls</span> <span class="flag">-R</span>                  <span class="comment"># recursive — show all subdirectories too</span>
+<span class="cmd-name">ls</span> <span class="string">/etc</span>               <span class="comment"># list files in /etc directory</span>
+
+<span class="comment"># Reading ls -l output:</span>
+<span class="output">drwxr-xr-x  2 ubuntu ubuntu 4096 Jan 15 10:30 Documents</span>
+<span class="comment"># d         = type: d=directory, -=file, l=symlink
+# rwxr-xr-x = permissions (owner/group/others)
+# 2         = hard link count
+# ubuntu    = owner username
+# ubuntu    = group name
+# 4096      = size in bytes
+# Jan 15    = last modified date
+# Documents = name</span></code></pre>
+
+      <h3>I/O Redirection — The superpower of the shell</h3>
+      <p>Commands read from <strong>stdin</strong> (keyboard by default) and write to <strong>stdout</strong> (screen by default). Redirection lets you change where they read/write.</p>
+
+      <table>
+        <tr><th>Operator</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td><code>&gt;</code></td><td>Redirect stdout to file (overwrites)</td><td><code>echo "hi" &gt; file.txt</code></td></tr>
+        <tr><td><code>&gt;&gt;</code></td><td>Append stdout to file</td><td><code>echo "hi" &gt;&gt; file.txt</code></td></tr>
+        <tr><td><code>&lt;</code></td><td>Read stdin from file</td><td><code>sort &lt; names.txt</code></td></tr>
+        <tr><td><code>2&gt;</code></td><td>Redirect stderr to file</td><td><code>cmd 2&gt; errors.log</code></td></tr>
+        <tr><td><code>2&gt;&amp;1</code></td><td>Redirect stderr to same place as stdout</td><td><code>cmd &gt; out.log 2&gt;&amp;1</code></td></tr>
+        <tr><td><code>&amp;&gt;</code></td><td>Redirect both stdout+stderr (bash only)</td><td><code>cmd &amp;&gt; all.log</code></td></tr>
+        <tr><td><code>/dev/null</code></td><td>Discard output (the black hole)</td><td><code>cmd &gt; /dev/null 2&gt;&amp;1</code></td></tr>
+      </table>
+
+      <pre><code><span class="comment"># Save command output to file:</span>
+<span class="cmd-name">ls</span> <span class="flag">-la</span> <span class="string">/etc</span> <span class="output">&gt;</span> <span class="string">etc_listing.txt</span>
+
+<span class="comment"># Append to a log:</span>
+<span class="cmd-name">date</span> <span class="output">&gt;&gt;</span> <span class="string">activity.log</span>
+
+<span class="comment"># Silence all output (common in cron jobs):</span>
+<span class="cmd-name">./backup.sh</span> <span class="output">&gt; /dev/null 2&gt;&amp;1</span>
+
+<span class="comment"># Capture errors separately:</span>
+<span class="cmd-name">./deploy.sh</span> <span class="output">&gt;</span> <span class="string">out.log</span> <span class="output">2&gt;</span> <span class="string">err.log</span></code></pre>
+
+      <h3>Pipes — Chaining commands together</h3>
+      <div class="note note-mental">
+        <div class="note-label">🧠 Mental Model</div>
+        <p>A pipe <code>|</code> connects the output of one command directly into the input of the next — like an assembly line. The first command finishes processing, hands results to the second, which hands to the third.</p>
+      </div>
+
+      <pre><code><span class="cmd-name">ls</span> <span class="flag">-la</span> | <span class="cmd-name">grep</span> <span class="string">"txt"</span>       <span class="comment"># list files, then filter for lines containing "txt"</span>
+<span class="cmd-name">ps</span> <span class="flag">aux</span> | <span class="cmd-name">grep</span> <span class="string">"nginx"</span>    <span class="comment"># list all processes, filter for nginx</span>
+<span class="cmd-name">cat</span> <span class="string">access.log</span> | <span class="cmd-name">sort</span> | <span class="cmd-name">uniq</span> <span class="flag">-c</span> | <span class="cmd-name">sort</span> <span class="flag">-rn</span> | <span class="cmd-name">head</span> <span class="flag">-20</span>
+<span class="comment"># ^ read log → sort alphabetically → count unique lines
+#   → sort by count (descending) → show top 20
+# This pattern is used DAILY in real production work</span></code></pre>
+
+      <h3>Command chaining operators</h3>
+      <pre><code><span class="cmd-name">cmd1</span> ; <span class="cmd-name">cmd2</span>            <span class="comment"># run cmd2 after cmd1, regardless of success</span>
+<span class="cmd-name">cmd1</span> && <span class="cmd-name">cmd2</span>           <span class="comment"># run cmd2 ONLY if cmd1 succeeded (exit code 0)</span>
+<span class="cmd-name">cmd1</span> || <span class="cmd-name">cmd2</span>           <span class="comment"># run cmd2 ONLY if cmd1 failed</span>
+
+<span class="comment"># Real world — safe deployment pattern:</span>
+<span class="cmd-name">git pull</span> && <span class="cmd-name">make build</span> && <span class="cmd-name">./deploy.sh</span>
+<span class="comment"># Only deploy if pull succeeded AND build succeeded</span></code></pre>
+
+      <h3>History and shortcuts</h3>
+      <pre><code><span class="cmd-name">history</span>                <span class="comment"># show command history (last 500 by default)</span>
+<span class="cmd-name">history</span> <span class="flag">20</span>             <span class="comment"># show last 20 commands</span>
+!<span class="string">42</span>                    <span class="comment"># re-run command number 42 from history</span>
+!!                     <span class="comment"># re-run the last command</span>
+!<span class="string">ls</span>                    <span class="comment"># re-run the most recent command starting with 'ls'</span>
+<span class="flag">Ctrl+R</span>                 <span class="comment"># reverse search through history (type to filter)</span>
+<span class="flag">Ctrl+C</span>                 <span class="comment"># interrupt/kill current running command</span>
+<span class="flag">Ctrl+D</span>                 <span class="comment"># send EOF (exit shell or end input)</span>
+<span class="flag">Ctrl+L</span>                 <span class="comment"># clear screen (same as 'clear' command)</span>
+<span class="flag">Ctrl+A</span>                 <span class="comment"># move cursor to beginning of line</span>
+<span class="flag">Ctrl+E</span>                 <span class="comment"># move cursor to end of line</span>
+<span class="flag">Ctrl+W</span>                 <span class="comment"># delete word before cursor</span>
+<span class="flag">Alt+.</span>                  <span class="comment"># paste the last argument of the previous command</span>
+<span class="flag">Tab</span>                    <span class="comment"># autocomplete commands, files, and paths</span>
+<span class="flag">Tab Tab</span>                <span class="comment"># show all possible completions</span></code></pre>
+
+      <h3>Useful day-to-day commands</h3>
+      <pre><code><span class="cmd-name">echo</span> <span class="string">"hello"</span>           <span class="comment"># print text to stdout</span>
+<span class="cmd-name">cat</span> <span class="string">file.txt</span>           <span class="comment"># print entire file contents</span>
+<span class="cmd-name">less</span> <span class="string">file.txt</span>          <span class="comment"># view file with pagination (q to quit)</span>
+<span class="cmd-name">head</span> <span class="flag">-20</span> <span class="string">file.txt</span>     <span class="comment"># show first 20 lines</span>
+<span class="cmd-name">tail</span> <span class="flag">-20</span> <span class="string">file.txt</span>     <span class="comment"># show last 20 lines</span>
+<span class="cmd-name">tail</span> <span class="flag">-f</span> <span class="string">file.txt</span>      <span class="comment"># follow file (new lines appear as written) — for logs!</span>
+<span class="cmd-name">wc</span> <span class="flag">-l</span> <span class="string">file.txt</span>        <span class="comment"># count lines in file</span>
+<span class="cmd-name">grep</span> <span class="string">"error" file.txt</span> <span class="comment"># search for "error" in file</span>
+<span class="cmd-name">grep</span> <span class="flag">-r</span> <span class="string">"error" /var/log</span> <span class="comment"># recursive search in directory</span>
+<span class="cmd-name">find</span> <span class="string">/home</span> <span class="flag">-name</span> <span class="string">"*.txt"</span>  <span class="comment"># find files by name pattern</span>
+<span class="cmd-name">clear</span>                  <span class="comment"># clear the terminal screen</span>
+<span class="cmd-name">exit</span>                   <span class="comment"># exit the shell / close SSH session</span></code></pre>
+    </div>
+
+    <!-- S4: Files & Configs -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-icon">📁</div>
+        <div>
+          <div class="section-title">Important Files & Configs</div>
+          <div class="section-num">Section 04 — Where the shell lives and stores settings</div>
+        </div>
+      </div>
+
+      <div class="note note-files">
+        <div class="note-label">📁 Key Files</div>
+        <p>The shell reads several files at startup to configure your environment. Knowing which file to edit for what purpose is critical — editing the wrong file is a very common source of confusion.</p>
+      </div>
+
+      <table>
+        <tr><th>File</th><th>When loaded</th><th>Purpose</th></tr>
+        <tr><td><code>~/.bashrc</code></td><td>Every new interactive non-login shell</td><td>Aliases, functions, PS1 prompt, interactive settings</td></tr>
+        <tr><td><code>~/.bash_profile</code></td><td>Login shells only (SSH, console login)</td><td>Sets PATH, env vars — usually sources .bashrc</td></tr>
+        <tr><td><code>~/.profile</code></td><td>Login shells (if .bash_profile absent)</td><td>POSIX-compatible env setup</td></tr>
+        <tr><td><code>~/.bash_logout</code></td><td>On logout</td><td>Cleanup tasks (clear screen, etc.)</td></tr>
+        <tr><td><code>~/.bash_history</code></td><td>Read/written on exit</td><td>Stores your command history</td></tr>
+        <tr><td><code>/etc/bash.bashrc</code></td><td>System-wide</td><td>Shared interactive bash settings for all users</td></tr>
+        <tr><td><code>/etc/profile</code></td><td>System-wide login</td><td>Shared login shell settings for all users</td></tr>
+        <tr><td><code>/etc/environment</code></td><td>System-wide at login</td><td>Global environment variables (not shell-specific)</td></tr>
+        <tr><td><code>/bin/bash</code></td><td>—</td><td>The bash binary itself</td></tr>
+        <tr><td><code>/etc/shells</code></td><td>—</td><td>List of valid login shells on the system</td></tr>
+      </table>
+
+      <h3>Shell startup order (login shell)</h3>
+      <pre><code><span class="comment"># When you SSH into a server, this is the load order:</span>
+<span class="output">/etc/profile</span>           <span class="comment"># 1st: system-wide profile (runs /etc/profile.d/*.sh)</span>
+<span class="output">~/.bash_profile</span>        <span class="comment"># 2nd: user's login profile</span>
+  <span class="output">→ sources ~/.bashrc</span>  <span class="comment"># .bash_profile should call: [ -f ~/.bashrc ] && . ~/.bashrc</span>
+<span class="output">~/.bashrc</span>              <span class="comment"># 3rd: interactive settings loaded</span></code></pre>
+
+      <h3>Environment variables</h3>
+      <pre><code><span class="cmd-name">env</span>                    <span class="comment"># print all current environment variables</span>
+<span class="cmd-name">echo</span> <span class="string">$HOME</span>             <span class="comment"># print your home directory</span>
+<span class="cmd-name">echo</span> <span class="string">$USER</span>             <span class="comment"># print your username</span>
+<span class="cmd-name">echo</span> <span class="string">$SHELL</span>            <span class="comment"># print path to your current shell</span>
+<span class="cmd-name">echo</span> <span class="string">$PATH</span>             <span class="comment"># print your search path</span>
+<span class="cmd-name">echo</span> <span class="string">$?</span>               <span class="comment"># print exit code of the last command (0=success)</span>
+<span class="cmd-name">echo</span> <span class="string">$$</span>               <span class="comment"># print the PID of the current shell</span>
+
+<span class="comment"># Setting variables:</span>
+<span class="cmd-name">MY_VAR</span>=<span class="string">"hello"</span>         <span class="comment"># set local variable (only this shell session)</span>
+<span class="cmd-name">export</span> <span class="string">MY_VAR="hello"</span>  <span class="comment"># set and EXPORT (child processes inherit it)</span>
+<span class="cmd-name">unset</span> <span class="string">MY_VAR</span>           <span class="comment"># remove a variable</span>
+
+<span class="comment"># Add a directory to PATH:</span>
+<span class="cmd-name">export</span> <span class="string">PATH="$PATH:/home/ubuntu/scripts"</span></code></pre>
+
+      <div class="note note-warn">
+        <div class="note-label">⚠️ Common Mistake</div>
+        <p>Spaces around <code>=</code> break variable assignment. <code>MY_VAR = "hello"</code> fails. It must be <code>MY_VAR="hello"</code> with no spaces. This trips up everyone at first.</p>
+      </div>
+    </div>
+
+    <!-- S5: Under the Hood -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-icon">🔬</div>
+        <div>
+          <div class="section-title">Under the Hood</div>
+          <div class="section-num">Section 05 — How the shell actually works internally</div>
+        </div>
+      </div>
+
+      <div class="note note-hood">
+        <div class="note-label">🔬 Under the Hood</div>
+        <p>When you press Enter, bash performs a precise sequence of steps — not just "run the command". Understanding this sequence explains many confusing behaviours.</p>
+      </div>
+
+      <h3>Command execution pipeline</h3>
+      <pre><code><span class="comment"># When you type: ls -la /home | grep ubuntu</span>
+<span class="comment"># Bash does ALL of this:</span>
+
+<span class="output">1. Tokenization</span>    <span class="comment"># Split into tokens: "ls", "-la", "/home", "|", "grep", "ubuntu"</span>
+<span class="output">2. Parse</span>           <span class="comment"># Identify pipeline structure</span>
+<span class="output">3. Expansions</span>      <span class="comment"># Process $VAR, ~, *, glob patterns, backticks</span>
+<span class="output">4. Redirect setup</span>  <span class="comment"># Wire pipe between ls stdout and grep stdin</span>
+<span class="output">5. fork()</span>          <span class="comment"># Kernel creates a copy of the bash process</span>
+<span class="output">6. exec()</span>          <span class="comment"># Child process replaces itself with /usr/bin/ls</span>
+<span class="output">7. wait()</span>          <span class="comment"># Bash waits for child to finish</span>
+<span class="output">8. Exit code</span>       <span class="comment"># Bash stores result in $?</span></code></pre>
+
+      <h3>File descriptors</h3>
+      <p>Every running process has a table of <strong>file descriptors</strong> — numbered connections to I/O streams. This is why redirection works the way it does.</p>
+      <table>
+        <tr><th>FD Number</th><th>Name</th><th>Default connection</th></tr>
+        <tr><td><code>0</code></td><td>stdin</td><td>Your keyboard</td></tr>
+        <tr><td><code>1</code></td><td>stdout</td><td>Your terminal screen</td></tr>
+        <tr><td><code>2</code></td><td>stderr</td><td>Your terminal screen (errors)</td></tr>
+        <tr><td><code>3+</code></td><td>Other files</td><td>Files your program opens</td></tr>
+      </table>
+
+      <pre><code><span class="comment"># Why cmd > file.txt 2>&1 works:
+# 1. ">" redirects FD1 (stdout) to file.txt
+# 2. "2>&1" says: make FD2 (stderr) point to whatever FD1 points to
+# 3. Both now write to file.txt
+# ORDER MATTERS: 2>&1 > file.txt would NOT redirect stderr to file!</span></code></pre>
+
+      <h3>Subshells and forking</h3>
+      <pre><code><span class="comment"># Parentheses create a SUBSHELL — changes don't affect parent</span>
+(cd /tmp && ls)        <span class="comment"># cd happens in subshell; you stay in your current dir</span>
+<span class="cmd-name">pwd</span>                    <span class="comment"># still in original directory!</span>
+
+<span class="comment"># vs. running commands directly — affects current shell:</span>
+<span class="cmd-name">cd</span> /tmp && <span class="cmd-name">ls</span>          <span class="comment"># you ARE now in /tmp</span></code></pre>
+
+      <h3>Shell expansions (order matters)</h3>
+      <pre><code><span class="comment"># Bash expands these IN ORDER before running the command:</span>
+
+<span class="output">1. Brace expansion:     </span><span class="cmd-name">echo</span> <span class="string">{a,b,c}</span>         → a b c
+<span class="output">2. Tilde expansion:     </span><span class="cmd-name">echo</span> <span class="string">~</span>              → /home/ubuntu
+<span class="output">3. Variable expansion:  </span><span class="cmd-name">echo</span> <span class="string">$HOME</span>          → /home/ubuntu
+<span class="output">4. Command substitution:</span><span class="cmd-name">echo</span> <span class="string">$(date)</span>       → Mon Jan 15 10:30:00
+<span class="output">5. Arithmetic:          </span><span class="cmd-name">echo</span> <span class="string">$((2+2))</span>      → 4
+<span class="output">6. Glob expansion:      </span><span class="cmd-name">ls</span> <span class="string">*.txt</span>          → all .txt files</code></pre>
+    </div>
+
+    <!-- S6: Real World -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-icon">🏭</div>
+        <div>
+          <div class="section-title">Real-World Usage</div>
+          <div class="section-num">Section 06 — How this is used in actual production work</div>
+        </div>
+      </div>
+
+      <div class="note note-real">
+        <div class="note-label">🏭 Real-World Usage</div>
+        <p>Shell skills are used every single day in DevOps and SRE roles. Here are patterns you will actually use in companies.</p>
+      </div>
+
+      <h3>Log analysis on a live server</h3>
+      <pre><code><span class="comment"># Find the top 10 IPs hitting your web server:</span>
+<span class="cmd-name">awk</span> <span class="string">'{print $1}'</span> /var/log/nginx/access.log | <span class="cmd-name">sort</span> | <span class="cmd-name">uniq</span> <span class="flag">-c</span> | <span class="cmd-name">sort</span> <span class="flag">-rn</span> | <span class="cmd-name">head</span> <span class="flag">10</span>
+
+<span class="comment"># Watch a log file in real-time while filtering:</span>
+<span class="cmd-name">tail</span> <span class="flag">-f</span> /var/log/nginx/error.log | <span class="cmd-name">grep</span> <span class="flag">--line-buffered</span> <span class="string">"ERROR"</span>
+
+<span class="comment"># Count 5xx errors in the last 100 lines:</span>
+<span class="cmd-name">tail</span> <span class="flag">-100</span> /var/log/nginx/access.log | <span class="cmd-name">grep</span> <span class="string">'" 5'</span> | <span class="cmd-name">wc</span> <span class="flag">-l</span></code></pre>
+
+      <h3>Quick system checks</h3>
+      <pre><code><span class="comment"># What's eating disk space?</span>
+<span class="cmd-name">du</span> <span class="flag">-sh</span> /var/log/*     | <span class="cmd-name">sort</span> <span class="flag">-rh</span> | <span class="cmd-name">head</span> <span class="flag">10</span>
+
+<span class="comment"># Is a service listening on a port?</span>
+<span class="cmd-name">ss</span> <span class="flag">-tlnp</span> | <span class="cmd-name">grep</span> <span class="string">":80"</span>
+
+<span class="comment"># Check who's logged in:</span>
+<span class="cmd-name">w</span>
+<span class="cmd-name">who</span>
+
+<span class="comment"># How long has the server been up?</span>
+<span class="cmd-name">uptime</span></code></pre>
+
+      <h3>Aliases that save time daily</h3>
+      <pre><code><span class="comment"># Add these to ~/.bashrc</span>
+<span class="cmd-name">alias</span> <span class="string">ll='ls -lahF --color=auto'</span>
+<span class="cmd-name">alias</span> <span class="string">..='cd ..'</span>
+<span class="cmd-name">alias</span> <span class="string">...='cd ../..'</span>
+<span class="cmd-name">alias</span> <span class="string">grep='grep --color=auto'</span>
+<span class="cmd-name">alias</span> <span class="string">myip='curl -s ifconfig.me'</span>
+<span class="cmd-name">alias</span> <span class="string">ports='ss -tlnp'</span>
+<span class="cmd-name">alias</span> <span class="string">tailf='tail -f'</span></code></pre>
+    </div>
+
+    <!-- S7: Modern vs Legacy -->
+    <div class="section" id="s7">
+      <div class="section-header">
+        <div class="section-icon">🔄</div>
+        <div>
+          <div class="section-title">Modern vs Legacy Tools</div>
+          <div class="section-num">Section 07 — When to use new tools vs classics</div>
+        </div>
+      </div>
+
+      <table>
+        <tr><th>Legacy</th><th>Modern Alternative</th><th>Why Modern is Better</th><th>Use Legacy When</th></tr>
+        <tr><td><code>ls</code></td><td><code>eza</code> / <code>exa</code></td><td>Colors, icons, git status, tree view</td><td>Always — ls is available everywhere</td></tr>
+        <tr><td><code>cat</code></td><td><code>bat</code></td><td>Syntax highlighting, line numbers, git diff</td><td>Scripting — bat may not be installed</td></tr>
+        <tr><td><code>find</code></td><td><code>fd</code></td><td>Faster, simpler syntax, respects .gitignore</td><td>Complex queries, POSIX scripts</td></tr>
+        <tr><td><code>grep</code></td><td><code>ripgrep (rg)</code></td><td>Much faster, colored output, .gitignore aware</td><td>POSIX environments, scripts</td></tr>
+        <tr><td><code>bash</code></td><td><code>zsh</code> + Oh My Zsh</td><td>Better completion, plugins, themes</td><td>Scripts — always use bash for portability</td></tr>
+        <tr><td><code>history</code></td><td><code>atuin</code></td><td>Synced, searchable history across machines</td><td>Simple single-machine use</td></tr>
+      </table>
+
+      <div class="note note-senior">
+        <div class="note-label">💡 Senior Engineer Insight</div>
+        <p>In production servers, you get <strong>only what's installed</strong>. Senior engineers are fluent in the classic tools (<code>grep</code>, <code>find</code>, <code>awk</code>, <code>sed</code>) because those are always there. Use modern tools for your local comfort; rely on classics in the field.</p>
+      </div>
+    </div>
+
+    <!-- S8: Beginner Mistakes -->
+    <div class="section" id="s8">
+      <div class="section-header">
+        <div class="section-icon">⚠️</div>
+        <div>
+          <div class="section-title">Common Beginner Mistakes</div>
+          <div class="section-num">Section 08 — What trips everyone up at first</div>
+        </div>
+      </div>
+
+      <div class="note note-warn">
+        <div class="note-label">⚠️ Common Mistakes</div>
+        <p>Every Linux beginner makes these mistakes. Read them now so you can avoid them.</p>
+      </div>
+
+      <ul>
+        <li><strong>Using spaces in variable assignment:</strong> <code>MY_VAR = "value"</code> fails. Must be <code>MY_VAR="value"</code>.</li>
+        <li><strong>Confusing <code>></code> and <code>>></code>:</strong> <code>></code> destroys the existing file first. <code>>></code> appends. Many people accidentally overwrite important files.</li>
+        <li><strong>Not quoting variables with spaces:</strong> <code>cp $FILE /dest</code> breaks if <code>$FILE</code> contains spaces. Always use <code>cp "$FILE" /dest</code>.</li>
+        <li><strong>Case sensitivity:</strong> <code>Documents</code> and <code>documents</code> are different directories on Linux. <code>ls Documents</code> ≠ <code>ls documents</code>.</li>
+        <li><strong>Confusing <code>.</code> (source) and executing a script:</strong> Running <code>./script.sh</code> uses a subshell. Running <code>. ./script.sh</code> or <code>source script.sh</code> runs it in the current shell (exports variables into your session).</li>
+        <li><strong>Forgetting tab completion:</strong> Typing full paths manually is slow and error-prone. Tab is your best friend.</li>
+        <li><strong>Not checking exit codes:</strong> Commands fail silently. Use <code>echo $?</code> after each command until it becomes second nature.</li>
+        <li><strong>Panic at "permission denied":</strong> Not a disaster — just means you need to check ownership and use the right user.</li>
+      </ul>
+    </div>
+
+    <!-- S9: Production Mistakes -->
+    <div class="section" id="s9">
+      <div class="section-header">
+        <div class="section-icon">🏗️</div>
+        <div>
+          <div class="section-title">Common Production Mistakes</div>
+          <div class="section-num">Section 09 — What causes real outages</div>
+        </div>
+      </div>
+
+      <ul>
+        <li><strong>Running destructive commands as root without double-checking:</strong> <code>rm -rf /tmp /myapp</code> — notice the accidental space. This removes <code>/tmp</code> and <code>/myapp</code> separately. Always use <code>echo</code> to test first.</li>
+        <li><strong>Modifying <code>.bashrc</code>/<code>.bash_profile</code> without testing:</strong> A syntax error will lock you out of your shell session in the future. Always test with <code>bash -n ~/.bashrc</code> before sourcing.</li>
+        <li><strong>Setting <code>PATH=""</code> or removing directories from PATH:</strong> You lose access to all external commands. Type full paths like <code>/bin/ls</code> to recover.</li>
+        <li><strong>Overwriting files with <code>></code> in critical directories:</strong> <code>echo "test" > /etc/hosts</code> destroys your DNS configuration instantly. No undo.</li>
+        <li><strong>Piping live data into <code>rm</code>:</strong> Always dry-run with <code>echo</code> or <code>ls</code> before <code>xargs rm</code>.</li>
+        <li><strong>Leaving debug <code>set -x</code> in production scripts:</strong> Floods logs, exposes secrets in output.</li>
+      </ul>
+
+      <div class="note note-sec">
+        <div class="note-label">🔐 Security Note</div>
+        <p>Never put secrets (passwords, API keys, tokens) in shell commands — they appear in <code>history</code> and in <code>/proc/&lt;pid&gt;/cmdline</code>. Use environment variables loaded from a secrets manager, or read from files with restricted permissions.</p>
+      </div>
+    </div>
+
+    <!-- S10: Debug Workflow -->
+    <div class="section" id="s10">
+      <div class="section-header">
+        <div class="section-icon">🛠</div>
+        <div>
+          <div class="section-title">Debugging Workflow</div>
+          <div class="section-num">Section 10 — Systematic approach to shell problems</div>
+        </div>
+      </div>
+
+      <div class="note note-debug">
+        <div class="note-label">🛠 Debugging Workflow</div>
+        <p>When something doesn't work in the shell, follow this checklist systematically instead of guessing randomly.</p>
+      </div>
+
+      <pre><code><span class="comment"># Step 1: Check the exit code</span>
+<span class="cmd-name">some_command</span>
+<span class="cmd-name">echo</span> <span class="string">$?</span>           <span class="comment"># 0 = success, anything else = failure</span>
+
+<span class="comment"># Step 2: Check if the command exists and where it is</span>
+<span class="cmd-name">which</span> <span class="string">mycommand</span>
+<span class="cmd-name">type</span> <span class="string">mycommand</span>
+
+<span class="comment"># Step 3: Check PATH if command not found</span>
+<span class="cmd-name">echo</span> <span class="string">$PATH</span>
+<span class="cmd-name">ls</span> <span class="string">/usr/local/bin/mycommand</span>   <span class="comment"># does the file exist?</span>
+<span class="cmd-name">ls</span> <span class="flag">-la</span> <span class="string">/usr/local/bin/mycommand</span> <span class="comment"># is it executable?</span>
+
+<span class="comment"># Step 4: Run with verbose/debug flags</span>
+<span class="cmd-name">bash</span> <span class="flag">-x</span> <span class="string">myscript.sh</span>   <span class="comment"># trace every command as it executes</span>
+<span class="cmd-name">bash</span> <span class="flag">-n</span> <span class="string">myscript.sh</span>   <span class="comment"># check syntax only, don't run</span>
+
+<span class="comment"># Step 5: Check environment variables</span>
+<span class="cmd-name">env</span> | <span class="cmd-name">grep</span> <span class="string">MY_VAR</span>     <span class="comment"># is the variable actually set?</span>
+
+<span class="comment"># Step 6: Check for permission issues</span>
+<span class="cmd-name">ls</span> <span class="flag">-la</span> <span class="string">thefile</span>        <span class="comment"># who owns it? what permissions?</span>
+<span class="cmd-name">id</span>                     <span class="comment"># what user and groups am I?</span>
+
+<span class="comment"># Step 7: Capture and inspect stderr separately</span>
+<span class="cmd-name">mycommand</span> <span class="output">2>&1</span> | <span class="cmd-name">tee</span> <span class="string">debug.log</span>   <span class="comment"># see AND save output</span></code></pre>
+    </div>
+
+    <!-- S11: Security -->
+    <div class="section" id="s11">
+      <div class="section-header">
+        <div class="section-icon">🔐</div>
+        <div>
+          <div class="section-title">Security Considerations</div>
+          <div class="section-num">Section 11 — Shell security from day one</div>
+        </div>
+      </div>
+
+      <ul>
+        <li><strong>Never pipe curl to bash in production:</strong> <code>curl https://... | bash</code> executes untrusted code directly. Download, inspect, then run.</li>
+        <li><strong>Shell history is a risk:</strong> Passwords typed in commands are stored in <code>~/.bash_history</code>. Set <code>HISTCONTROL=ignorespace</code> — commands with a leading space are not saved.</li>
+        <li><strong>Command injection:</strong> Building commands from user input without sanitisation is dangerous. This is how many real attacks work.</li>
+        <li><strong>Umask:</strong> Controls default permissions for new files. Check with <code>umask</code>. A value of <code>022</code> means new files are 644 (rw-r--r--).</li>
+        <li><strong>Avoid running services as root:</strong> If an attacker exploits a service running as root, they own the system. Run services as dedicated low-privilege users.</li>
+        <li><strong>Audit aliases:</strong> An alias like <code>alias sudo='sudo -i'</code> silently elevates all sudo calls to root shell. Check <code>alias</code> on unfamiliar machines.</li>
+      </ul>
+    </div>
+
+    <!-- S12: Performance -->
+    <div class="section" id="s12">
+      <div class="section-header">
+        <div class="section-icon">🚀</div>
+        <div>
+          <div class="section-title">Performance Considerations</div>
+          <div class="section-num">Section 12 — Shell efficiency in scripts and pipelines</div>
+        </div>
+      </div>
+
+      <div class="note note-perf">
+        <div class="note-label">🚀 Performance Notes</div>
+        <p>Shell is not meant for number-crunching. But pipelines can be dramatically faster when you avoid unnecessary processes.</p>
+      </div>
+
+      <pre><code><span class="comment"># SLOW: Useless Use of Cat (UUOC)</span>
+<span class="cmd-name">cat</span> <span class="string">file.txt</span> | <span class="cmd-name">grep</span> <span class="string">"error"</span>     <span class="comment"># cat is unnecessary here</span>
+
+<span class="comment"># FAST: grep reads the file directly</span>
+<span class="cmd-name">grep</span> <span class="string">"error"</span> <span class="string">file.txt</span>
+
+<span class="comment"># SLOW: For large files</span>
+<span class="cmd-name">wc</span> <span class="flag">-l</span> < <span class="string">$(find /var/log -name "*.log")</span>  <span class="comment"># spawns many processes</span>
+
+<span class="comment"># FAST: Use awk for multi-step text processing (fewer processes)</span>
+<span class="cmd-name">awk</span> <span class="string">'/error/ {count++} END {print count}'</span> <span class="string">file.txt</span></code></pre>
+
+      <ul>
+        <li>Each process in a pipeline has startup overhead. Prefer single-program solutions (<code>awk</code>, <code>sed</code>) over chains of 5+ commands for large files.</li>
+        <li>Built-in shell operations (<code>[[ ]]</code>, arithmetic <code>$(( ))</code>) are faster than forking external commands.</li>
+        <li>For very large data processing, shell is the wrong tool — use Python, Go, or compiled programs instead.</li>
+      </ul>
+    </div>
+
+    <!-- S13: Best Practices -->
+    <div class="section" id="s13">
+      <div class="section-header">
+        <div class="section-icon">💡</div>
+        <div>
+          <div class="section-title">Best Practices — Senior Level</div>
+          <div class="section-num">Section 13 — How experienced engineers use the shell</div>
+        </div>
+      </div>
+
+      <div class="senior-block">
+        <h4>How a senior engineer thinks about the shell</h4>
+        <ul>
+          <li>They verify commands with <code>echo</code> or dry-run flags before destructive operations. Always.</li>
+          <li>They document complex pipelines with comments in scripts — not just for others, but for future-self at 2am during an incident.</li>
+          <li>They use <code>set -euo pipefail</code> at the top of every bash script — fail fast, fail loudly, fail early.</li>
+          <li>They maintain a personal <code>~/.bashrc</code> snippet library backed up in git — the same aliases and functions across every server.</li>
+          <li>They understand the startup file chain so they can diagnose "why isn't my variable set?" in 30 seconds.</li>
+          <li>They use <code>tee</code> to both see and save output during critical operations.</li>
+          <li>They don't pipe curl to bash. Ever.</li>
+        </ul>
+      </div>
+
+      <pre><code><span class="comment"># Professional script header (always start like this):</span>
+#!/usr/bin/env bash
+<span class="cmd-name">set</span> <span class="flag">-euo pipefail</span>    <span class="comment"># -e: exit on error, -u: error on unset var, -o pipefail: pipes fail correctly</span>
+<span class="cmd-name">IFS</span>=<span class="string">$'\n\t'</span>           <span class="comment"># safer word splitting (no splitting on spaces)</span>
+
+<span class="comment"># tee for visibility + logging:</span>
+<span class="cmd-name">./deploy.sh</span> 2>&1 | <span class="cmd-name">tee</span> <span class="flag">-a</span> <span class="string">/var/log/deploys/$(date +%Y%m%d_%H%M%S).log</span></code></pre>
+    </div>
+
+    <!-- S14: Incidents -->
+    <div class="section" id="s14">
+      <div class="section-header">
+        <div class="section-icon">🔥</div>
+        <div>
+          <div class="section-title">Real Incident Scenarios</div>
+          <div class="section-num">Section 14 — What happens when shells go wrong in production</div>
+        </div>
+      </div>
+
+      <div class="incident">
+        <div class="incident-label">🚨 Production Incident — Simulation</div>
+        <h4>The PATH Wipe Incident</h4>
+        <p><strong>Scenario:</strong> A junior engineer edits <code>~/.bashrc</code> and writes <code>export PATH=/usr/local/myapp</code> instead of <code>export PATH="/usr/local/myapp:$PATH"</code>. They open a new SSH session.</p>
+        <p><strong>Symptom:</strong> <code>bash: ls: command not found</code>. ALL external commands fail. The engineer panics and closes the SSH session — locking themselves out of recovery too.</p>
+        <p><strong>Recovery:</strong></p>
+        <pre style="margin: 8px 0;"><code><span class="comment"># From a still-open session (never close all sessions!):</span>
+<span class="cmd-name">export</span> <span class="string">PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"</span>
+<span class="cmd-name">nano</span> <span class="string">~/.bashrc</span>        <span class="comment"># fix the PATH line</span>
+<span class="cmd-name">source</span> <span class="string">~/.bashrc</span>      <span class="comment"># verify it works before opening a new session</span></code></pre>
+        <p><strong>Lesson:</strong> Always have a second SSH session open when modifying shell config files. Always append to PATH (<code>$PATH:</code>), never replace it. Always test with <code>bash -n ~/.bashrc</code> before sourcing.</p>
+      </div>
+
+      <div class="incident">
+        <div class="incident-label">🚨 Production Incident — Simulation</div>
+        <h4>The Accidental Overwrite</h4>
+        <p><strong>Scenario:</strong> During a log rotation task, an engineer runs <code>gzip -c app.log > /var/log/app.log</code> instead of <code>gzip -c app.log > /var/log/app.log.gz</code>. The <code>></code> truncates app.log to zero bytes before gzip can read it.</p>
+        <p><strong>Lesson:</strong> The <code>></code> redirection opens and truncates the destination <em>before</em> the command reads the source. If source and destination are the same file, data is lost. Always use different paths, or use a temp file + mv.</p>
+      </div>
+    </div>
+
+    <!-- S15: Labs -->
+    <div class="section" id="s15">
+      <div class="section-header">
+        <div class="section-icon">🧪</div>
+        <div>
+          <div class="section-title">Hands-On Labs</div>
+          <div class="section-num">Section 15 — Practice from beginner to advanced</div>
+        </div>
+      </div>
+
+      <div class="lab-block">
+        <div class="lab-header">
+          <span class="lab-badge beginner">BEGINNER</span>
+          <span class="lab-title">Lab 1 — Terminal Navigation & Basic Commands</span>
+        </div>
+        <div class="lab-body">
+          <div class="lab-step"><span class="step-num">1</span><span>Open a terminal and run <code>pwd</code>. Note your home directory path.</span></div>
+          <div class="lab-step"><span class="step-num">2</span><span>Run <code>ls -la ~</code> and identify: a regular file, a hidden file, a directory.</span></div>
+          <div class="lab-step"><span class="step-num">3</span><span>Navigate to <code>/etc</code> and back home. Use <code>cd -</code> to toggle between them 3 times.</span></div>
+          <div class="lab-step"><span class="step-num">4</span><span>Create this chain: <code>echo "Learning Linux" > ~/practice.txt && cat ~/practice.txt</code></span></div>
+          <div class="lab-step"><span class="step-num">5</span><span>Use tab completion to navigate to <code>/usr/share/doc</code> without typing the full path.</span></div>
+          <div class="lab-step"><span class="step-num">6</span><span>Run <code>ls -ltr /etc | head -20</code> and explain what each flag does.</span></div>
+          <div class="lab-step"><span class="step-num">7</span><span>Press <code>Ctrl+R</code> and search for the <code>echo</code> command from step 4.</span></div>
+        </div>
+      </div>
+
+      <div class="lab-block">
+        <div class="lab-header">
+          <span class="lab-badge intermediate">INTERMEDIATE</span>
+          <span class="lab-title">Lab 2 — Pipes, Redirection & Environment</span>
+        </div>
+        <div class="lab-body">
+          <div class="lab-step"><span class="step-num">1</span><span>List all files in <code>/etc</code> that contain "conf" in the name: <code>ls /etc | grep conf</code></span></div>
+          <div class="lab-step"><span class="step-num">2</span><span>Save the list to a file, then count how many there are: <code>ls /etc | grep conf > confs.txt && wc -l confs.txt</code></span></div>
+          <div class="lab-step"><span class="step-num">3</span><span>Find the 5 largest files in <code>/var/log</code>: <code>du -sh /var/log/* 2>/dev/null | sort -rh | head -5</code></span></div>
+          <div class="lab-step"><span class="step-num">4</span><span>Add an alias to <code>~/.bashrc</code>: <code>alias ll='ls -lahF'</code>. Source it and use it.</span></div>
+          <div class="lab-step"><span class="step-num">5</span><span>Export a custom variable: <code>export MYNAME="YourName"</code>. Verify with <code>echo $MYNAME</code> and <code>env | grep MYNAME</code>.</span></div>
+          <div class="lab-step"><span class="step-num">6</span><span>Run a command in a subshell: <code>(cd /tmp && ls) && pwd</code>. Confirm you didn't change directory.</span></div>
+        </div>
+      </div>
+
+      <div class="lab-block">
+        <div class="lab-header">
+          <span class="lab-badge advanced">ADVANCED</span>
+          <span class="lab-title">Lab 3 — Real Production Patterns</span>
+        </div>
+        <div class="lab-body">
+          <div class="lab-step"><span class="step-num">1</span><span>Generate a fake access log: <code>for i in {1..100}; do echo "192.168.$((RANDOM%5)).1 GET /page$((RANDOM%10))"; done > access.log</code></span></div>
+          <div class="lab-step"><span class="step-num">2</span><span>Find the most common IP: <code>awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -3</code></span></div>
+          <div class="lab-step"><span class="step-num">3</span><span>Use <code>tee</code> to both print and save output: <code>ls -la /etc | tee /tmp/etc_audit.txt | wc -l</code></span></div>
+          <div class="lab-step"><span class="step-num">4</span><span>Safely test a complex command chain with <code>&&</code>: <code>echo "step1" && echo "step2" && echo "step3"</code>. Now make step2 fail: <code>echo "step1" && false && echo "step3"</code></span></div>
+          <div class="lab-step"><span class="step-num">5</span><span>Capture stderr separately from stdout: write a script that echoes to both stdout (<code>echo</code>) and stderr (<code>echo "err" >&2</code>), then run it with <code>./script.sh > out.log 2> err.log</code>.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S16: Break & Fix -->
+    <div class="section" id="s16">
+      <div class="section-header">
+        <div class="section-icon">💣</div>
+        <div>
+          <div class="section-title">Break It & Fix It</div>
+          <div class="section-num">Section 16 — Intentional breakage builds intuition</div>
+        </div>
+      </div>
+
+      <div class="note note-break">
+        <div class="note-label">🧪 Break It & Fix It</div>
+        <p>The following exercises intentionally break something safe to fix. Each one teaches a real debugging skill. All are recoverable.</p>
+      </div>
+
+      <ul>
+        <li><strong>Break 1 — Corrupt PATH in a subshell:</strong> Run <code>(export PATH="" && ls)</code>. Observe the error. Notice the outer shell is still fine. Now fix it in the subshell before exiting.</li>
+        <li><strong>Break 2 — Variable with spaces:</strong> Try <code>MY VAR="hello"</code> (space in name). Read the error. Try <code>MY_VAR ="hello"</code> (space before =). Read the error. Then write it correctly.</li>
+        <li><strong>Break 3 — Overwrite with <code>></code>:</strong> Create <code>test.txt</code> with content. Run <code>echo "" > test.txt</code>. Check what happened with <code>cat test.txt</code>. Understand why.</li>
+        <li><strong>Break 4 — Syntax error in .bashrc (safe method):</strong> Add <code>echo "missing quote</code> (no closing quote) to a <em>test copy</em> of your bashrc. Run <code>bash -n /path/to/testrc</code> and see how bash reports the error.</li>
+        <li><strong>Break 5 — Failed pipeline:</strong> Run <code>cat /nonexistent | grep something</code>. Check <code>echo $?</code>. Now run with <code>set -o pipefail</code> in a subshell and see how the exit code changes.</li>
+      </ul>
+    </div>
+
+    <!-- S17: Mini Project -->
+    <div class="section" id="s17">
+      <div class="section-header">
+        <div class="section-icon">🎯</div>
+        <div>
+          <div class="section-title">Mini Project</div>
+          <div class="section-num">Section 17 — Build something real</div>
+        </div>
+      </div>
+
+      <div class="capstone-box" style="background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin: 16px 0; border-left: 3px solid var(--accent);">
+        <h4 style="font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 10px;">🎯 Mini Project: Personal Shell Toolkit</h4>
+        <p>Build a <code>~/.bashrc</code> configuration that a real engineer would be proud of. Requirements:</p>
+        <ul>
+          <li>At least 8 useful aliases (ls variations, git shortcuts, navigation)</li>
+          <li>A custom prompt (PS1) showing: username, hostname, current directory, git branch if in a git repo</li>
+          <li>A function called <code>mkcd</code> that creates a directory and immediately cds into it</li>
+          <li>A function called <code>extract</code> that extracts any archive format (.zip, .tar.gz, .tar.bz2) using one command</li>
+          <li>A function called <code>myip</code> that shows your local and public IP</li>
+          <li>Proper PATH additions (add <code>~/scripts</code> to PATH)</li>
+          <li>Back up this file to a <code>~/dotfiles</code> directory and symlink it</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- S18: Capstone -->
+    <div class="section" id="s18">
+      <div class="section-header">
+        <div class="section-icon">🏆</div>
+        <div>
+          <div class="section-title">Capstone Connection</div>
+          <div class="section-num">Section 18 — How this topic feeds the phase capstone</div>
+        </div>
+      </div>
+
+      <p>The Phase 1 capstone is the <strong>System Health Report Script</strong> (<code>sysreport.sh</code>). Every shell skill you learned in this topic is used directly:</p>
+      <ul>
+        <li>Shell navigation + file ops → reading and writing the report file</li>
+        <li>Pipes and grep → parsing process and disk output</li>
+        <li><code>>></code> redirection → appending to the log file</li>
+        <li><code>&&</code> chaining → only proceed if each check succeeds</li>
+        <li>Variables → storing disk usage thresholds</li>
+        <li><code>2>/dev/null</code> → suppressing errors from checks on optional paths</li>
+        <li><code>tee</code> → printing to terminal AND appending to log simultaneously</li>
+      </ul>
+      <p>Come back to this section after completing Topics 2–7. You'll use every technique from the shell topic inside that script.</p>
+    </div>
+
+    <!-- S19: Interview Questions -->
+    <div class="section" id="s19">
+      <div class="section-header">
+        <div class="section-icon">❓</div>
+        <div>
+          <div class="section-title">Interview Questions</div>
+          <div class="section-num">Section 19 — Junior to Senior level</div>
+        </div>
+      </div>
+
+      <div class="iq-item">
+        <div class="iq-level level-jr">Junior</div>
+        <div class="iq-q">What is the difference between a shell and a terminal?</div>
+        <div class="iq-hint">Hint: one is software interpreting commands; the other is the display/interface.</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-jr">Junior</div>
+        <div class="iq-q">What does the <code>$PATH</code> variable do and how does the shell use it?</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-jr">Junior</div>
+        <div class="iq-q">What is the difference between <code>></code> and <code>>></code>?</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-jr">Junior</div>
+        <div class="iq-q">What does <code>2>&1</code> mean? Why does the order of redirection matter?</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-mid">Mid</div>
+        <div class="iq-q">What is the difference between running <code>source ./script.sh</code> and <code>./script.sh</code>?</div>
+        <div class="iq-hint">Hint: subshell vs current shell context. Variable scope.</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-mid">Mid</div>
+        <div class="iq-q">What is the load order of bash startup files for a login shell vs an interactive non-login shell?</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-mid">Mid</div>
+        <div class="iq-q">What does <code>set -euo pipefail</code> do? Why do senior engineers include it in every script?</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-mid">Mid</div>
+        <div class="iq-q">Explain what happens internally when you run a command in the shell. What system calls are involved?</div>
+        <div class="iq-hint">Hint: fork(), exec(), wait()</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-sr">Senior</div>
+        <div class="iq-q">A user reports their shell aliases aren't available after SSH-ing into a server. How do you diagnose and fix this?</div>
+        <div class="iq-hint">Hint: login shell vs interactive shell, .bash_profile vs .bashrc</div>
+      </div>
+      <div class="iq-item">
+        <div class="iq-level level-sr">Senior</div>
+        <div class="iq-q">You run <code>cmd1 | cmd2</code>. cmd1 exits with code 1 but cmd2 exits with code 0. What does <code>$?</code> report? How do you catch the cmd1 failure?</div>
+        <div class="iq-hint">Hint: PIPESTATUS array, pipefail option</div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>Self-test questions</h3>
+      <ol>
+        <li>What's the difference between <code>bash</code> and <code>sh</code>? Which should you use for scripts you want to run everywhere?</li>
+        <li>You want to add <code>~/scripts</code> to PATH permanently. Which file do you edit? What exact line do you add?</li>
+        <li>What does <code>echo $?</code> print after a successful command?</li>
+        <li>Why might <code>cd /newdir</code> inside a script not affect your shell after the script exits?</li>
+        <li>What command tells you if <code>grep</code> is a builtin, an alias, or an external binary?</li>
+        <li>How do you suppress ALL output from a command including errors?</li>
+        <li>What keyboard shortcut searches your command history interactively?</li>
+        <li>What does the <code>;</code> operator do between commands vs <code>&&</code>?</li>
+        <li>What file stores your command history between sessions?</li>
+        <li>How do you check which shell you are currently using?</li>
+      </ol>
+    </div>
+
+    <!-- S20: Cheat Sheet -->
+    <div class="section" id="s20">
+      <div class="section-header">
+        <div class="section-icon">📝</div>
+        <div>
+          <div class="section-title">Cheat Sheet & Revision Summary</div>
+          <div class="section-num">Section 20 — Your quick reference card</div>
+        </div>
+      </div>
+
+      <div class="cheat-grid">
+        <div class="cheat-card">
+          <h4>Navigation</h4>
+          <div class="cheat-row"><span class="cheat-cmd">pwd</span><span class="cheat-desc">where am I?</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cd /path</span><span class="cheat-desc">go to directory</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cd -</span><span class="cheat-desc">previous directory</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cd ~</span><span class="cheat-desc">home directory</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">ls -lahF</span><span class="cheat-desc">list all, human sizes</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>I/O Redirection</h4>
+          <div class="cheat-row"><span class="cheat-cmd">cmd > file</span><span class="cheat-desc">overwrite stdout</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd >> file</span><span class="cheat-desc">append stdout</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd 2> file</span><span class="cheat-desc">redirect stderr</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd &> file</span><span class="cheat-desc">stdout + stderr</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd > /dev/null</span><span class="cheat-desc">discard output</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>Chaining</h4>
+          <div class="cheat-row"><span class="cheat-cmd">cmd1 | cmd2</span><span class="cheat-desc">pipe output</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd1 && cmd2</span><span class="cheat-desc">run if success</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd1 || cmd2</span><span class="cheat-desc">run if failure</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">cmd1 ; cmd2</span><span class="cheat-desc">run always</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">( cmd )</span><span class="cheat-desc">subshell</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>Variables</h4>
+          <div class="cheat-row"><span class="cheat-cmd">VAR="val"</span><span class="cheat-desc">local variable</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">export VAR="val"</span><span class="cheat-desc">export to children</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">echo $VAR</span><span class="cheat-desc">print variable</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">unset VAR</span><span class="cheat-desc">delete variable</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">echo $?</span><span class="cheat-desc">last exit code</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>Keyboard Shortcuts</h4>
+          <div class="cheat-row"><span class="cheat-cmd">Ctrl+R</span><span class="cheat-desc">search history</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">Ctrl+C</span><span class="cheat-desc">kill command</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">Ctrl+L</span><span class="cheat-desc">clear screen</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">Ctrl+A / E</span><span class="cheat-desc">line start / end</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">Alt+.</span><span class="cheat-desc">last argument</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>Key Config Files</h4>
+          <div class="cheat-row"><span class="cheat-cmd">~/.bashrc</span><span class="cheat-desc">interactive settings</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">~/.bash_profile</span><span class="cheat-desc">login shell</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">~/.bash_history</span><span class="cheat-desc">command history</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">/etc/shells</span><span class="cheat-desc">valid shells list</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">/etc/environment</span><span class="cheat-desc">system-wide env</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>Debugging</h4>
+          <div class="cheat-row"><span class="cheat-cmd">echo $?</span><span class="cheat-desc">check exit code</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">which cmd</span><span class="cheat-desc">find binary path</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">type cmd</span><span class="cheat-desc">builtin/alias/file?</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">bash -x script</span><span class="cheat-desc">trace execution</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">bash -n script</span><span class="cheat-desc">syntax check only</span></div>
+        </div>
+        <div class="cheat-card">
+          <h4>File Viewing</h4>
+          <div class="cheat-row"><span class="cheat-cmd">cat file</span><span class="cheat-desc">print whole file</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">less file</span><span class="cheat-desc">paginate (q=quit)</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">head -20 file</span><span class="cheat-desc">first 20 lines</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">tail -f file</span><span class="cheat-desc">follow live updates</span></div>
+          <div class="cheat-row"><span class="cheat-cmd">wc -l file</span><span class="cheat-desc">count lines</span></div>
+        </div>
+      </div>
+
+      <div class="recap" style="margin-top: 24px;">
+        <h4>📝 One-Day Revision Plan</h4>
+        <p style="color: var(--text2); font-size: 14px; margin-bottom: 8px;">If you have only 1 hour to revise this topic:</p>
+        <ul>
+          <li><strong style="color: var(--accent);">15 min</strong> — Re-read sections 1, 2 (shell basics, anatomy of a command)</li>
+          <li><strong style="color: var(--accent);">20 min</strong> — Practice the keyboard shortcuts and redirection operators in a terminal without looking at notes</li>
+          <li><strong style="color: var(--accent);">15 min</strong> — Re-run Lab 2 (intermediate) from memory</li>
+          <li><strong style="color: var(--accent);">10 min</strong> — Answer the 10 self-test questions out loud</li>
+        </ul>
+      </div>
+
+      <div class="senior-block">
+        <h4>How a senior engineer thinks about Shell Basics</h4>
+        <p style="color: var(--text2); font-size: 14px; line-height: 1.75;">Senior engineers don't think of the shell as a place to "type commands" — they think of it as a <strong style="color: var(--text);">programmable text pipeline</strong>. Every command is a filter or transformer. Data flows through pipes. The exit code is a contract. The shell startup files are infrastructure — versioned in git, deployed consistently across machines. When something breaks on a production server, the first 30 seconds are always: check exit codes, check PATH, check which user you are, check stderr. These fundamentals save you every single time.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<script>
+  // Scroll progress
+  window.addEventListener('scroll', updateNav);
+
+  function updateNav() {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('prog-label').textContent = pct + '% read';
+
+    // Active nav highlight based on scroll position
+    const navItems = document.querySelectorAll('.nav-item');
+    const targets = ['overview','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20'];
+    let current = 'overview';
+    for (const id of targets) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 120) current = id;
+    }
+    navItems.forEach(item => {
+      item.classList.toggle('active', item.getAttribute('href') === '#' + current);
+    });
+  }
+
+  // Click nav item — set active immediately, then scroll
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      this.classList.add('active');
+      // Also scroll the sidebar to keep active item visible
+      const sidebar = document.querySelector('.sidebar');
+      const itemTop = this.offsetTop;
+      const sidebarHeight = sidebar.clientHeight;
+      if (itemTop > sidebar.scrollTop + sidebarHeight - 80 || itemTop < sidebar.scrollTop + 60) {
+        sidebar.scrollTop = itemTop - sidebarHeight / 2;
+      }
+    });
+  });
+
+  // Run once on load
+  updateNav();
+</script>
+</body>
+</html>

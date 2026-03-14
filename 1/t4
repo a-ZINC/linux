@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T4 — Package Managers | Phase 1 Linux Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d0f;
+  --surface:#101316;
+  --surface2:#161a1e;
+  --surface3:#1c2126;
+  --border:#232931;
+  --border2:#2e3740;
+  --text:#dfe4eb;
+  --text2:#8896a4;
+  --text3:#4e5d6b;
+  --acc:#2dd4bf;
+  --acc2:#818cf8;
+  --acc3:#fb923c;
+  --acc4:#34d399;
+  --acc5:#f472b6;
+  --acc6:#fbbf24;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#eab308;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Syne',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;min-height:100vh}
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:255px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100}
+.sidebar-header{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.phase-badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:3px 8px;background:rgba(45,212,191,0.1);color:var(--acc);border-radius:4px;border:1px solid rgba(45,212,191,0.2);margin-bottom:8px;letter-spacing:.05em}
+.sidebar-header h1{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.sidebar-header p{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono)}
+.nav-section-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:14px 16px 5px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:6px 16px;font-size:12.5px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;transition:all .15s;text-decoration:none}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--acc);border-left-color:var(--acc);background:rgba(45,212,191,0.05)}
+.nav-icon{font-size:13px;width:16px;flex-shrink:0}
+.progress-bar{margin:14px 16px 4px;background:var(--surface3);border-radius:4px;height:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--acc);border-radius:4px;width:0%;transition:width .2s}
+.progress-label{font-family:var(--mono);font-size:10px;color:var(--text3);margin:0 16px 14px}
+
+/* Main */
+.main{margin-left:255px;flex:1;max-width:920px;padding:40px 48px}
+
+/* Hero */
+.hero{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.topic-tag{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:.08em;margin-bottom:12px;display:block}
+.hero h1{font-size:42px;font-weight:800;line-height:1.1;margin-bottom:16px}
+.hero h1 span{color:var(--acc)}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.meta-chip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--text2)}
+.meta-chip .dot{width:6px;height:6px;border-radius:50%}
+.hero-desc{font-size:16px;color:var(--text2);line-height:1.7;max-width:680px}
+.outcomes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:20px}
+.outcome-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text2);padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.outcome-item::before{content:'✓';color:var(--acc);font-weight:700;flex-shrink:0;font-size:12px;margin-top:1px}
+
+/* Sections */
+.section{margin-bottom:54px;scroll-margin-top:24px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.section-icon{font-size:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:8px;border:1px solid var(--border);flex-shrink:0}
+.section-title{font-size:22px;font-weight:700;color:var(--text)}
+.section-num{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px}
+h3{font-size:14px;font-weight:700;color:var(--acc2);margin:20px 0 8px;font-family:var(--mono);letter-spacing:.03em}
+p{color:var(--text2);line-height:1.75;margin-bottom:12px}
+p strong{color:var(--text);font-weight:600}
+
+/* Notes */
+.note{border-radius:8px;padding:14px 18px;margin:14px 0;border-left:3px solid}
+.note-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;font-family:var(--mono)}
+.note p,.note li{margin:0;font-size:14px}
+.note ul{padding-left:18px}
+.note-mental{background:rgba(45,212,191,0.06);border-color:var(--acc)}
+.note-mental .note-label{color:var(--acc)}
+.note-files{background:rgba(251,191,36,0.06);border-color:var(--acc6)}
+.note-files .note-label{color:var(--acc6)}
+.note-hood{background:rgba(129,140,248,0.06);border-color:var(--acc2)}
+.note-hood .note-label{color:var(--acc2)}
+.note-real{background:rgba(52,211,153,0.06);border-color:var(--acc4)}
+.note-real .note-label{color:var(--acc4)}
+.note-warn{background:rgba(239,68,68,0.06);border-color:var(--red)}
+.note-warn .note-label{color:var(--red)}
+.note-debug{background:rgba(234,179,8,0.07);border-color:var(--yellow)}
+.note-debug .note-label{color:var(--yellow)}
+.note-sec{background:rgba(244,114,182,0.07);border-color:var(--acc5)}
+.note-sec .note-label{color:var(--acc5)}
+.note-perf{background:rgba(45,212,191,0.06);border-color:#22d3ee}
+.note-perf .note-label{color:#22d3ee}
+.note-senior{background:rgba(129,140,248,0.07);border-color:var(--acc2)}
+.note-senior .note-label{color:var(--acc2)}
+.note-try{background:rgba(45,212,191,0.06);border-color:var(--acc)}
+.note-try .note-label{color:var(--acc)}
+.note-break{background:rgba(251,146,60,0.06);border-color:var(--acc3)}
+.note-break .note-label{color:var(--acc3)}
+
+/* Code */
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;overflow-x:auto;margin:12px 0;font-family:var(--mono);font-size:13px;line-height:1.75}
+code{font-family:var(--mono);font-size:13px;background:var(--surface3);padding:2px 6px;border-radius:4px;color:var(--acc2)}
+pre code{background:none;padding:0;color:var(--text)}
+.cm{color:var(--text3)}
+.cn{color:var(--acc)}
+.fl{color:var(--acc6)}
+.st{color:var(--acc4)}
+.kw{color:var(--acc3)}
+.er{color:var(--red)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);text-align:left}
+td{padding:9px 12px;border:1px solid var(--border);color:var(--text2);vertical-align:top}
+td code{font-size:12px}
+tr:hover td{background:var(--surface2)}
+
+ul,ol{padding-left:20px;margin:10px 0}
+li{color:var(--text2);margin-bottom:6px;line-height:1.65;font-size:14px}
+li strong{color:var(--text)}
+.divider{border:none;border-top:1px solid var(--border);margin:28px 0}
+
+/* Package lifecycle diagram */
+.pkg-flow{display:flex;align-items:stretch;gap:0;margin:16px 0;overflow-x:auto;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.pf-step{flex:1;min-width:110px;padding:14px 12px;background:var(--surface2);border-right:1px solid var(--border);text-align:center}
+.pf-step:last-child{border-right:none}
+.pf-icon{font-size:20px;margin-bottom:6px}
+.pf-title{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pf-sub{font-size:11px;color:var(--text3)}
+.pf-step.active-step{background:rgba(45,212,191,0.06);border-bottom:2px solid var(--acc)}
+.pf-step.active-step .pf-title{color:var(--acc)}
+
+/* Distro comparison */
+.distro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:14px 0}
+.distro-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.distro-name{font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:8px}
+.distro-name.debian{color:#d70751}
+.distro-name.rhel{color:#ee0000}
+.distro-name.arch{color:#1793d1}
+.distro-name.suse{color:#73ba25}
+.distro-item{font-size:12px;color:var(--text3);margin-bottom:3px;font-family:var(--mono)}
+.distro-item span{color:var(--text2)}
+
+/* apt state machine */
+.state-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+.state-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:4px;flex-shrink:0;min-width:100px;text-align:center}
+.sb-installed{background:rgba(52,211,153,0.12);color:var(--acc4)}
+.sb-candidate{background:rgba(45,212,191,0.12);color:var(--acc)}
+.sb-held{background:rgba(251,191,36,0.12);color:var(--acc6)}
+.sb-purged{background:rgba(239,68,68,0.1);color:var(--red)}
+.sb-config{background:rgba(129,140,248,0.1);color:var(--acc2)}
+.state-arrow{color:var(--text3);font-size:16px}
+.state-desc{color:var(--text2);font-size:13px}
+
+/* Lab blocks */
+.lab-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:14px 0}
+.lab-header{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--surface3);border-bottom:1px solid var(--border)}
+.lab-badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.05em}
+.lab-badge.beginner{background:rgba(34,197,94,0.15);color:var(--green)}
+.lab-badge.intermediate{background:rgba(234,179,8,0.15);color:var(--yellow)}
+.lab-badge.advanced{background:rgba(239,68,68,0.15);color:var(--red)}
+.lab-title{font-size:14px;font-weight:600;color:var(--text)}
+.lab-body{padding:14px 16px}
+.lab-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:13.5px;color:var(--text2)}
+.step-num{font-family:var(--mono);font-size:11px;background:var(--surface3);border:1px solid var(--border);width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;flex-shrink:0;color:var(--acc);margin-top:1px}
+
+/* Incident */
+.incident{background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:18px 20px;margin:14px 0}
+.incident-label{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.incident h4{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px}
+
+/* Interview */
+.iq-item{border-left:2px solid var(--border2);padding:9px 16px;margin:7px 0;transition:border-color .15s}
+.iq-item:hover{border-left-color:var(--acc)}
+.iq-level{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.level-jr{color:var(--green)}
+.level-mid{color:var(--yellow)}
+.level-sr{color:var(--acc3)}
+.iq-q{font-size:14px;color:var(--text);font-weight:500}
+.iq-hint{font-size:12px;color:var(--text3);margin-top:3px;font-style:italic}
+
+/* Cheat sheet */
+.cheat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.cheat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.cheat-card h4{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.cheat-row{display:flex;gap:8px;align-items:baseline;margin-bottom:5px}
+.cheat-cmd{font-family:var(--mono);color:var(--acc2);flex-shrink:0;min-width:155px;font-size:12px}
+.cheat-desc{color:var(--text3);font-size:12px}
+
+.senior-block{background:linear-gradient(135deg,rgba(45,212,191,0.05) 0%,rgba(129,140,248,0.04) 100%);border:1px solid rgba(45,212,191,0.18);border-radius:10px;padding:20px 24px;margin:20px 0}
+.senior-block h4{font-size:15px;font-weight:700;color:var(--acc);margin-bottom:10px}
+.recap{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 22px;margin:14px 0}
+.recap h4{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.capstone-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 22px;margin:14px 0;border-left:3px solid var(--acc4)}
+
+.mob-toggle{display:none;position:fixed;bottom:20px;right:20px;z-index:200;background:var(--acc);color:var(--bg);border:none;border-radius:50%;width:48px;height:48px;font-size:18px;cursor:pointer;font-family:var(--mono);font-weight:700;align-items:center;justify-content:center}
+@media(max-width:800px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:24px 20px}
+  .mob-toggle{display:flex}
+  .hero h1{font-size:28px}
+  .pkg-flow{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="phase-badge">PHASE 1 · TOPIC 4</span>
+    <h1>Package Managers</h1>
+    <p>Linux Mastery Curriculum</p>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="progress-label" id="prog-label">0% read</div>
+  <div class="nav-section-label">Foundations</div>
+  <a class="nav-item" href="#overview"><span class="nav-icon">▶</span>Overview & Outcomes</a>
+  <a class="nav-item" href="#s1"><span class="nav-icon">🧠</span>Beginner Intuition</a>
+  <a class="nav-item" href="#s2"><span class="nav-icon">📖</span>Core Fundamentals</a>
+  <a class="nav-item" href="#s3"><span class="nav-icon">⚙️</span>Commands & Syntax</a>
+  <a class="nav-item" href="#s4"><span class="nav-icon">📁</span>Files & Configs</a>
+  <a class="nav-item" href="#s5"><span class="nav-icon">🔬</span>Under the Hood</a>
+  <div class="nav-section-label">Practical</div>
+  <a class="nav-item" href="#s6"><span class="nav-icon">🏭</span>Real-World Usage</a>
+  <a class="nav-item" href="#s7"><span class="nav-icon">🔄</span>Modern vs Legacy</a>
+  <a class="nav-item" href="#s8"><span class="nav-icon">⚠️</span>Beginner Mistakes</a>
+  <a class="nav-item" href="#s9"><span class="nav-icon">🏗️</span>Production Mistakes</a>
+  <a class="nav-item" href="#s10"><span class="nav-icon">🛠</span>Debug Workflow</a>
+  <div class="nav-section-label">Senior Level</div>
+  <a class="nav-item" href="#s11"><span class="nav-icon">🔐</span>Security</a>
+  <a class="nav-item" href="#s12"><span class="nav-icon">🚀</span>Performance</a>
+  <a class="nav-item" href="#s13"><span class="nav-icon">💡</span>Best Practices</a>
+  <a class="nav-item" href="#s14"><span class="nav-icon">🔥</span>Incident Scenarios</a>
+  <div class="nav-section-label">Labs & Review</div>
+  <a class="nav-item" href="#s15"><span class="nav-icon">🧪</span>Hands-On Labs</a>
+  <a class="nav-item" href="#s16"><span class="nav-icon">💣</span>Break & Fix</a>
+  <a class="nav-item" href="#s17"><span class="nav-icon">🎯</span>Mini Project</a>
+  <a class="nav-item" href="#s18"><span class="nav-icon">🏆</span>Capstone Connection</a>
+  <a class="nav-item" href="#s19"><span class="nav-icon">❓</span>Interview Questions</a>
+  <a class="nav-item" href="#s20"><span class="nav-icon">📝</span>Cheat Sheet</a>
+</nav>
+
+<main class="main">
+
+<!-- Hero -->
+<div class="hero" id="overview">
+  <span class="topic-tag">PHASE 1 · TOPIC 4 OF 8 · EST. 2–3 HOURS</span>
+  <h1>Package <span>Managers</span></h1>
+  <div class="hero-meta">
+    <div class="meta-chip"><div class="dot" style="background:var(--acc)"></div>2–3 hours study</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc2)"></div>Beginner → Senior</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc6)"></div>Ubuntu 22.04 LTS</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc5)"></div>Prereq: T1 + T2 + T3</div>
+  </div>
+  <p class="hero-desc">Package managers are how Linux systems install, update, and remove software reliably. A broken package manager can take down a production server just as surely as a disk failure. Understanding what happens under the hood — repositories, dependency resolution, dpkg vs apt — separates engineers who blindly run commands from those who can recover when things go wrong.</p>
+  <div class="outcomes-grid">
+    <div class="outcome-item">Understand the relationship between apt, dpkg, and repositories</div>
+    <div class="outcome-item">Install, update, remove, and search for packages confidently</div>
+    <div class="outcome-item">Add third-party repositories and GPG keys correctly</div>
+    <div class="outcome-item">Hold packages at specific versions to prevent unwanted upgrades</div>
+    <div class="outcome-item">Understand the full apt package lifecycle</div>
+    <div class="outcome-item">Work with dpkg directly for forensics and repair</div>
+    <div class="outcome-item">Understand snap and when to use it vs apt</div>
+    <div class="outcome-item">Debug broken packages, unmet dependencies, and locked dpkg</div>
+  </div>
+</div>
+
+<!-- S1 -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon">🧠</div>
+    <div><div class="section-title">Beginner Intuition</div><div class="section-num">Section 01 — Simple Mental Model</div></div>
+  </div>
+  <div class="note note-mental">
+    <div class="note-label">🧠 Mental Model</div>
+    <p>Think of a package manager like a <strong>smart app store for your terminal</strong>. Instead of downloading an installer from a website, you tell the package manager what you want by name. It finds the right version, checks that all its dependencies are available, downloads everything, verifies the integrity, and installs it — in the correct order. It also remembers everything it installed so it can cleanly uninstall or upgrade later.</p>
+  </div>
+  <p>There are <strong>two layers</strong> to understand on Debian/Ubuntu systems, and this layering trips up beginners constantly:</p>
+
+  <div class="pkg-flow">
+    <div class="pf-step">
+      <div class="pf-icon">🌐</div>
+      <div class="pf-title">Repository</div>
+      <div class="pf-sub">Remote server with .deb files + metadata</div>
+    </div>
+    <div class="pf-step active-step">
+      <div class="pf-icon">📦</div>
+      <div class="pf-title">apt</div>
+      <div class="pf-sub">High-level: resolves deps, fetches, calls dpkg</div>
+    </div>
+    <div class="pf-step">
+      <div class="pf-icon">🔧</div>
+      <div class="pf-title">dpkg</div>
+      <div class="pf-sub">Low-level: unpacks .deb, runs scripts, tracks state</div>
+    </div>
+    <div class="pf-step">
+      <div class="pf-icon">💾</div>
+      <div class="pf-title">Disk</div>
+      <div class="pf-sub">Files installed to /usr, /etc, /var/lib</div>
+    </div>
+  </div>
+
+  <p><strong>apt</strong> is the high-level tool you use daily. It talks to repositories, resolves dependency chains, and calls <strong>dpkg</strong> to do the actual installation. <strong>dpkg</strong> is the low-level tool that unpacks <code>.deb</code> files and maintains the installed package database. You interact with dpkg directly mainly for forensics and repair.</p>
+
+  <div class="note note-try">
+    <div class="note-label">✅ Try It Now</div>
+    <p>Run <code>apt show curl</code>. Read the output — notice the Version, Depends, and Description fields. This is the package metadata apt reads from the repository.</p>
+  </div>
+</div>
+
+<!-- S2 -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon">📖</div>
+    <div><div class="section-title">Core Fundamentals</div><div class="section-num">Section 02 — Repositories, packages, and the Debian ecosystem</div></div>
+  </div>
+
+  <h3>What is a package?</h3>
+  <p>A <strong>.deb package</strong> is a compressed archive containing: the software's files (binaries, libraries, configs, docs), metadata (name, version, dependencies, maintainer), and lifecycle scripts (pre/post install/remove). Every package has a <strong>control file</strong> that declares its name, version, and what other packages it depends on.</p>
+
+  <h3>Package states</h3>
+  <p>Every installed package has a tracked state in dpkg's database. Understanding this is critical for debugging:</p>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin:12px 0">
+    <div class="state-row"><span class="state-badge sb-installed">installed</span><span class="state-arrow">→</span><span class="state-desc">fully installed and configured</span></div>
+    <div class="state-row"><span class="state-badge sb-candidate">half-installed</span><span class="state-arrow">→</span><span class="state-desc">install started but failed midway — needs repair</span></div>
+    <div class="state-row"><span class="state-badge sb-held">held</span><span class="state-arrow">→</span><span class="state-desc">intentionally pinned — upgrades blocked</span></div>
+    <div class="state-row"><span class="state-badge sb-config">config-files</span><span class="state-arrow">→</span><span class="state-desc">removed but config files remain on disk</span></div>
+    <div class="state-row"><span class="state-badge sb-purged">purged</span><span class="state-arrow">→</span><span class="state-desc">removed including all config files</span></div>
+  </div>
+
+  <h3>Repositories and sources</h3>
+  <p>apt fetches packages from <strong>repositories</strong> — servers that host <code>.deb</code> files and signed index files. Ubuntu ships with several default repositories:</p>
+
+  <table>
+    <tr><th>Component</th><th>Content</th><th>Support</th></tr>
+    <tr><td><code>main</code></td><td>Free, open-source, officially supported</td><td>Full Ubuntu support</td></tr>
+    <tr><td><code>restricted</code></td><td>Proprietary drivers (e.g., NVIDIA)</td><td>Supported</td></tr>
+    <tr><td><code>universe</code></td><td>Community-maintained open-source</td><td>Community only</td></tr>
+    <tr><td><code>multiverse</code></td><td>Non-free, patent-encumbered</td><td>No support</td></tr>
+    <tr><td><code>security</code></td><td>Security updates only</td><td>Critical</td></tr>
+    <tr><td><code>updates</code></td><td>Stable bug fixes post-release</td><td>Stable</td></tr>
+    <tr><td><code>backports</code></td><td>Newer versions backported to older releases</td><td>Use carefully</td></tr>
+  </table>
+
+  <h3>Package manager landscape across distros</h3>
+  <div class="distro-grid">
+    <div class="distro-card">
+      <div class="distro-name debian">Debian / Ubuntu</div>
+      <div class="distro-item">High-level: <span>apt</span></div>
+      <div class="distro-item">Low-level: <span>dpkg</span></div>
+      <div class="distro-item">Format: <span>.deb</span></div>
+      <div class="distro-item">Source list: <span>/etc/apt/sources.list</span></div>
+    </div>
+    <div class="distro-card">
+      <div class="distro-name rhel">RHEL / CentOS / Fedora</div>
+      <div class="distro-item">High-level: <span>dnf / yum</span></div>
+      <div class="distro-item">Low-level: <span>rpm</span></div>
+      <div class="distro-item">Format: <span>.rpm</span></div>
+      <div class="distro-item">Source list: <span>/etc/yum.repos.d/</span></div>
+    </div>
+    <div class="distro-card">
+      <div class="distro-name arch">Arch Linux</div>
+      <div class="distro-item">High-level: <span>pacman / yay</span></div>
+      <div class="distro-item">Low-level: <span>pacman</span></div>
+      <div class="distro-item">Format: <span>.pkg.tar.zst</span></div>
+      <div class="distro-item">Source list: <span>/etc/pacman.conf</span></div>
+    </div>
+    <div class="distro-card">
+      <div class="distro-name suse">openSUSE</div>
+      <div class="distro-item">High-level: <span>zypper</span></div>
+      <div class="distro-item">Low-level: <span>rpm</span></div>
+      <div class="distro-item">Format: <span>.rpm</span></div>
+      <div class="distro-item">Source list: <span>/etc/zypp/repos.d/</span></div>
+    </div>
+  </div>
+
+  <div class="note note-senior">
+    <div class="note-label">💡 Senior Engineer Insight</div>
+    <p>Ubuntu 22.04 (Jammy) ships with both the old <code>/etc/apt/sources.list</code> format and the new <code>/etc/apt/sources.list.d/*.sources</code> DEB822 format. Modern third-party repos (Docker, GitHub CLI, NodeSource) now use the new format with keyring files in <code>/etc/apt/keyrings/</code>. Know both formats — you'll see both in the wild.</p>
+  </div>
+</div>
+
+<!-- S3 -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon">⚙️</div>
+    <div><div class="section-title">Commands & Syntax</div><div class="section-num">Section 03 — Full apt and dpkg command reference</div></div>
+  </div>
+
+  <h3>apt — daily workflow</h3>
+  <pre><code><span class="cm"># ── Update & Upgrade ──────────────────────────────────────────────</span>
+<span class="cn">apt update</span>                        <span class="cm"># refresh package index from all repos</span>
+                                   <span class="cm"># (does NOT install anything — just fetches metadata)</span>
+<span class="cn">apt upgrade</span>                       <span class="cm"># upgrade all packages to newest version</span>
+<span class="cn">apt full-upgrade</span>                  <span class="cm"># upgrade + remove packages if needed to resolve deps</span>
+                                   <span class="cm"># (safer name for old apt-get dist-upgrade)</span>
+<span class="cn">apt upgrade</span> <span class="fl">--dry-run</span>             <span class="cm"># simulate: show what WOULD be upgraded</span>
+
+<span class="cm"># ── Install ───────────────────────────────────────────────────────</span>
+<span class="cn">apt install</span> <span class="st">nginx</span>                <span class="cm"># install nginx</span>
+<span class="cn">apt install</span> <span class="st">nginx=1.18.0-0ubuntu1</span><span class="cm"> # install specific version</span>
+<span class="cn">apt install</span> <span class="st">nginx curl git</span>       <span class="cm"># install multiple packages</span>
+<span class="cn">apt install</span> <span class="fl">--no-install-recommends</span> <span class="st">nginx</span>  <span class="cm"># skip recommended (for minimal installs)</span>
+<span class="cn">apt install</span> <span class="fl">-f</span>                    <span class="cm"># fix broken dependencies</span>
+<span class="cn">apt install</span> <span class="fl">--reinstall</span> <span class="st">nginx</span>    <span class="cm"># reinstall package (corrupted files)</span>
+
+<span class="cm"># ── Remove ────────────────────────────────────────────────────────</span>
+<span class="cn">apt remove</span> <span class="st">nginx</span>                  <span class="cm"># remove package, KEEP config files</span>
+<span class="cn">apt purge</span> <span class="st">nginx</span>                   <span class="cm"># remove package AND config files</span>
+<span class="cn">apt autoremove</span>                    <span class="cm"># remove packages no longer needed as deps</span>
+<span class="cn">apt autoremove</span> <span class="fl">--purge</span>            <span class="cm"># autoremove + purge their configs too</span>
+
+<span class="cm"># ── Search & Info ─────────────────────────────────────────────────</span>
+<span class="cn">apt search</span> <span class="st">nginx</span>                  <span class="cm"># search package names and descriptions</span>
+<span class="cn">apt show</span> <span class="st">nginx</span>                    <span class="cm"># show full package details</span>
+<span class="cn">apt list</span> <span class="fl">--installed</span>              <span class="cm"># list all installed packages</span>
+<span class="cn">apt list</span> <span class="fl">--upgradable</span>             <span class="cm"># list packages with available upgrades</span>
+<span class="cn">apt-cache</span> <span class="st">depends nginx</span>          <span class="cm"># show what nginx depends on</span>
+<span class="cn">apt-cache</span> <span class="st">rdepends nginx</span>         <span class="cm"># show what depends ON nginx (reverse)</span>
+<span class="cn">apt-cache</span> <span class="st">policy nginx</span>           <span class="cm"># show installed vs candidate version + repo priority</span>
+
+<span class="cm"># ── Clean ─────────────────────────────────────────────────────────</span>
+<span class="cn">apt clean</span>                         <span class="cm"># delete ALL cached .deb files from /var/cache/apt/archives</span>
+<span class="cn">apt autoclean</span>                     <span class="cm"># delete only outdated cached .debs</span></code></pre>
+
+  <h3>Package pinning — hold versions</h3>
+  <pre><code><span class="cm"># Hold a package at its current version (won't be upgraded)</span>
+<span class="cn">apt-mark hold</span> <span class="st">nginx</span>               <span class="cm"># hold nginx at current version</span>
+<span class="cn">apt-mark unhold</span> <span class="st">nginx</span>             <span class="cm"># release the hold</span>
+<span class="cn">apt-mark showhold</span>                  <span class="cm"># list all held packages</span>
+
+<span class="cm"># dpkg method (equivalent):</span>
+<span class="cn">echo</span> <span class="st">"nginx hold"</span> | <span class="cn">dpkg --set-selections</span>
+<span class="cn">dpkg --get-selections</span> | <span class="cn">grep hold</span> <span class="cm"># verify</span>
+
+<span class="cm"># Advanced: pin via preferences file</span>
+<span class="cm"># /etc/apt/preferences.d/nginx-pin</span>
+<span class="kw">Package:</span> nginx
+<span class="kw">Pin:</span> version 1.18.0-0ubuntu1
+<span class="kw">Pin-Priority:</span> 1001         <span class="cm"># >1000 = hold even if installed version is newer</span></code></pre>
+
+  <h3>dpkg — low-level operations</h3>
+  <pre><code><span class="cm"># Install/query .deb files directly</span>
+<span class="cn">dpkg</span> <span class="fl">-i</span> <span class="st">package.deb</span>               <span class="cm"># install a local .deb file</span>
+<span class="cn">dpkg</span> <span class="fl">-r</span> <span class="st">nginx</span>                      <span class="cm"># remove package (keep configs)</span>
+<span class="cn">dpkg</span> <span class="fl">-P</span> <span class="st">nginx</span>                      <span class="cm"># purge package (remove configs too)</span>
+
+<span class="cm"># Query the installed package database</span>
+<span class="cn">dpkg</span> <span class="fl">-l</span>                            <span class="cm"># list all packages + status</span>
+<span class="cn">dpkg</span> <span class="fl">-l</span> <span class="st">nginx</span>                      <span class="cm"># check install status of nginx</span>
+<span class="cn">dpkg</span> <span class="fl">-L</span> <span class="st">nginx</span>                      <span class="cm"># list all files installed BY nginx</span>
+<span class="cn">dpkg</span> <span class="fl">-S</span> <span class="st">/usr/sbin/nginx</span>           <span class="cm"># which package owns this file?</span>
+<span class="cn">dpkg</span> <span class="fl">--status</span> <span class="st">nginx</span>               <span class="cm"># full package metadata</span>
+<span class="cn">dpkg</span> <span class="fl">--print-architecture</span>         <span class="cm"># what arch is this system?</span>
+
+<span class="cm"># Reading dpkg -l status columns:</span>
+<span class="cm"># ii  nginx  1.18.0  amd64  high performance web server</span>
+<span class="cm"># ↑↑</span>
+<span class="cm"># First char: desired state (i=install, h=hold, r=remove, p=purge)</span>
+<span class="cm"># Second char: current state (i=installed, c=config-files, n=not-installed)</span>
+<span class="cm"># Third char: error flag (space=ok, R=reinst-required, H=half-installed)</span>
+
+<span class="cm"># Reconfigure an installed package:</span>
+<span class="cn">dpkg-reconfigure</span> <span class="st">tzdata</span>           <span class="cm"># re-run the post-install config wizard</span>
+<span class="cn">dpkg-reconfigure</span> <span class="st">locales</span>         <span class="cm"># useful after a locale issue</span></code></pre>
+
+  <h3>Adding third-party repositories (modern method)</h3>
+  <pre><code><span class="cm"># Modern pattern (Ubuntu 22.04+) — using signed-by and /etc/apt/keyrings/</span>
+<span class="cm"># Example: adding Docker's official repository</span>
+
+<span class="cm"># Step 1: Install prerequisites</span>
+<span class="cn">apt install</span> <span class="fl">-y</span> ca-certificates curl
+
+<span class="cm"># Step 2: Download and store GPG key</span>
+<span class="cn">install</span> <span class="fl">-m 0755 -d</span> /etc/apt/keyrings
+<span class="cn">curl</span> <span class="fl">-fsSL</span> https://download.docker.com/linux/ubuntu/gpg \
+  | <span class="cn">gpg --dearmor -o</span> /etc/apt/keyrings/docker.gpg
+<span class="cn">chmod</span> a+r /etc/apt/keyrings/docker.gpg
+
+<span class="cm"># Step 3: Add repository with signed-by reference</span>
+echo <span class="st">"deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"</span> \
+  | <span class="cn">tee</span> /etc/apt/sources.list.d/docker.list > /dev/null
+
+<span class="cm"># Step 4: Update and install</span>
+<span class="cn">apt update</span> && <span class="cn">apt install</span> docker-ce
+
+<span class="cm"># Old (insecure) pattern — avoid on new systems:</span>
+<span class="cm"># apt-key add keyfile.gpg  ← deprecated, adds to shared keyring</span></code></pre>
+
+  <h3>snap — universal package format</h3>
+  <pre><code><span class="cn">snap find</span> <span class="st">chromium</span>               <span class="cm"># search snap store</span>
+<span class="cn">snap install</span> <span class="st">chromium</span>            <span class="cm"># install snap package</span>
+<span class="cn">snap list</span>                         <span class="cm"># list installed snaps</span>
+<span class="cn">snap info</span> <span class="st">chromium</span>               <span class="cm"># show snap details and available channels</span>
+<span class="cn">snap refresh</span>                      <span class="cm"># update all snaps</span>
+<span class="cn">snap refresh</span> <span class="st">chromium</span>            <span class="cm"># update specific snap</span>
+<span class="cn">snap remove</span> <span class="st">chromium</span>             <span class="cm"># remove snap</span>
+<span class="cn">snap revert</span> <span class="st">chromium</span>             <span class="cm"># roll back to previous version</span>
+<span class="cn">snap connections</span> <span class="st">chromium</span>        <span class="cm"># show what interfaces (permissions) snap uses</span></code></pre>
+</div>
+
+<!-- S4 -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon">📁</div>
+    <div><div class="section-title">Important Files & Configs</div><div class="section-num">Section 04 — Where apt and dpkg store everything</div></div>
+  </div>
+
+  <div class="note note-files">
+    <div class="note-label">📁 Key Files — Know These Cold</div>
+    <p>These files define how apt behaves, where it fetches packages, and what's currently installed. You will read and edit them regularly.</p>
+  </div>
+
+  <table>
+    <tr><th>Path</th><th>Purpose</th><th>When you need it</th></tr>
+    <tr><td><code>/etc/apt/sources.list</code></td><td>Primary repository list</td><td>Adding/removing repos (legacy format)</td></tr>
+    <tr><td><code>/etc/apt/sources.list.d/</code></td><td>Drop-in repo files (one per source)</td><td>Third-party repos go here</td></tr>
+    <tr><td><code>/etc/apt/keyrings/</code></td><td>GPG keys for repo verification</td><td>Modern signed-by key storage</td></tr>
+    <tr><td><code>/etc/apt/preferences.d/</code></td><td>Package pinning rules</td><td>Holding specific versions</td></tr>
+    <tr><td><code>/etc/apt/apt.conf.d/</code></td><td>apt configuration files</td><td>Proxy settings, auto-update config</td></tr>
+    <tr><td><code>/var/lib/apt/lists/</code></td><td>Cached package index (from apt update)</td><td>Debugging stale index; safe to delete</td></tr>
+    <tr><td><code>/var/cache/apt/archives/</code></td><td>Downloaded .deb files (cache)</td><td>Offline install, cache cleanup</td></tr>
+    <tr><td><code>/var/lib/dpkg/status</code></td><td>dpkg's database of installed packages</td><td>The source of truth for what's installed</td></tr>
+    <tr><td><code>/var/lib/dpkg/info/</code></td><td>Per-package scripts and file lists</td><td>Forensics; find which files belong to which pkg</td></tr>
+    <tr><td><code>/var/log/apt/history.log</code></td><td>apt operation history (human-readable)</td><td>Audit: what was installed when?</td></tr>
+    <tr><td><code>/var/log/apt/term.log</code></td><td>Full terminal output of all apt ops</td><td>Debugging failed installs</td></tr>
+    <tr><td><code>/var/log/dpkg.log</code></td><td>Low-level dpkg operation log</td><td>Detailed install/remove events</td></tr>
+    <tr><td><code>/var/lib/snapd/</code></td><td>Snap package data and state</td><td>Snap forensics</td></tr>
+  </table>
+
+  <h3>sources.list format</h3>
+  <pre><code><span class="cm"># /etc/apt/sources.list — one line per repository</span>
+<span class="cm"># Format: deb [options] uri suite components...</span>
+
+deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+<span class="cm"># deb         = binary packages (deb-src = source packages)</span>
+<span class="cm"># jammy       = Ubuntu 22.04 codename</span>
+<span class="cm"># main etc    = repository components</span>
+
+deb http://archive.ubuntu.com/ubuntu jammy-security main restricted
+deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe
+
+<span class="cm"># Third-party with signed-by (modern format):</span>
+deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable</code></pre>
+</div>
+
+<!-- S5 -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon">🔬</div>
+    <div><div class="section-title">Under the Hood</div><div class="section-num">Section 05 — How apt resolves dependencies and installs packages</div></div>
+  </div>
+
+  <div class="note note-hood">
+    <div class="note-label">🔬 Under the Hood</div>
+    <p>When you run <code>apt install nginx</code>, many steps happen before a single file lands on disk. Understanding this sequence explains every error message you'll encounter.</p>
+  </div>
+
+  <h3>What apt install actually does</h3>
+  <pre><code><span class="cm"># apt install nginx — internal sequence:</span>
+
+<span class="cm"># 1. READ the local package index (/var/lib/apt/lists/)</span>
+<span class="cm">#    Find nginx's entry: name, version, dependencies, download URL</span>
+
+<span class="cm"># 2. DEPENDENCY RESOLUTION (the hard part)</span>
+<span class="cm">#    Build a dependency graph: nginx needs libpcre3, zlib1g, openssl...</span>
+<span class="cm">#    Each dep may need its own deps (transitive closure)</span>
+<span class="cm">#    Find versions that satisfy ALL constraints simultaneously</span>
+<span class="cm">#    If impossible → "unmet dependencies" error</span>
+
+<span class="cm"># 3. DOWNLOAD .deb files to /var/cache/apt/archives/</span>
+<span class="cm">#    Verify checksums (SHA256) against signed package index</span>
+<span class="cm">#    If checksum mismatch → abort (prevents tampering)</span>
+
+<span class="cm"># 4. UNPACK via dpkg</span>
+<span class="cm">#    Extract .deb archive</span>
+<span class="cm">#    Run preinst script (if any)</span>
+<span class="cm">#    Copy files to filesystem</span>
+<span class="cm">#    Run postinst script (creates users, starts services, etc.)</span>
+
+<span class="cm"># 5. UPDATE dpkg database (/var/lib/dpkg/status)</span>
+<span class="cm">#    Mark package as installed</span>
+<span class="cm">#    Record all installed file paths in /var/lib/dpkg/info/nginx.list</span></code></pre>
+
+  <h3>GPG signatures and trust chain</h3>
+  <p>Every repository's package index is signed by the maintainer's GPG key. apt verifies this signature before trusting the index. Without GPG verification, an attacker could serve malicious packages from a mirror. This is why <code>apt-key add</code> (adding to the global keyring) is deprecated — it trusted ALL repos with that key. The modern <code>signed-by=</code> approach scopes each key to its specific repository.</p>
+
+  <pre><code><span class="cm"># Check what keys apt trusts:</span>
+<span class="cn">apt-key list</span>                      <span class="cm"># deprecated keyring (legacy)</span>
+<span class="cn">ls -la</span> /etc/apt/keyrings/          <span class="cm"># modern per-repo keys</span>
+<span class="cn">gpg --show-keys</span> /etc/apt/keyrings/docker.gpg  <span class="cm"># inspect a key</span></code></pre>
+
+  <h3>Snap internals: squashfs and confinement</h3>
+  <p>Snaps are distributed as read-only <strong>squashfs</strong> images, mounted at <code>/snap/package/version/</code>. They bundle their own dependencies — no system library conflicts. They run in <strong>AppArmor confinement</strong> with declared interface permissions (network, home, camera). Updates are atomic: the new version is downloaded and mounted before the old one is removed, so rollback is always possible.</p>
+
+  <pre><code><span class="cn">ls /snap</span>                           <span class="cm"># see all mounted snap packages</span>
+<span class="cn">df -h</span> | <span class="cn">grep snap</span>                 <span class="cm"># each snap mount takes a small /dev/loopX</span>
+<span class="cm"># Common complaint: many snaps = many loop devices cluttering df -h</span>
+<span class="cm"># Filter: df -h --exclude-type=squashfs</span></code></pre>
+</div>
+
+<!-- S6 -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon">🏭</div>
+    <div><div class="section-title">Real-World Usage</div><div class="section-num">Section 06 — Patterns used in production and automation</div></div>
+  </div>
+
+  <div class="note note-real">
+    <div class="note-label">🏭 Real-World Patterns</div>
+    <p>These are patterns used in Ansible playbooks, Docker images, CI pipelines, and server provisioning scripts.</p>
+  </div>
+
+  <h3>Non-interactive apt for scripts and Docker</h3>
+  <pre><code><span class="cm"># Set DEBIAN_FRONTEND to prevent prompts in scripts/containers</span>
+<span class="kw">DEBIAN_FRONTEND=noninteractive</span> <span class="cn">apt install</span> <span class="fl">-y</span> tzdata
+
+<span class="cm"># Docker best practice — combine update + install + clean in one layer:</span>
+<span class="kw">RUN</span> apt-get update \
+    && apt-get install -y --no-install-recommends \
+        nginx \
+        curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+<span class="cm"># Why one RUN? Docker caches each layer. Separate update+install layers</span>
+<span class="cm"># cause the "cached stale index" problem — install runs against old metadata</span></code></pre>
+
+  <h3>Unattended security updates</h3>
+  <pre><code><span class="cm"># Install unattended-upgrades for automatic security patching</span>
+<span class="cn">apt install</span> unattended-upgrades
+<span class="cn">dpkg-reconfigure</span> unattended-upgrades   <span class="cm"># enable via interactive prompt</span>
+
+<span class="cm"># Config: /etc/apt/apt.conf.d/50unattended-upgrades</span>
+<span class="cm"># Review what it would do:</span>
+<span class="cn">unattended-upgrade</span> <span class="fl">--dry-run -v</span>
+
+<span class="cm"># Check when it last ran:</span>
+<span class="cn">cat</span> /var/log/unattended-upgrades/unattended-upgrades.log</code></pre>
+
+  <h3>Auditing package history</h3>
+  <pre><code><span class="cm"># What was installed/upgraded recently?</span>
+<span class="cn">cat</span> /var/log/apt/history.log
+
+<span class="cm"># Find when a specific package was installed:</span>
+<span class="cn">grep</span> <span class="st">"install nginx"</span> /var/log/dpkg.log
+
+<span class="cm"># List all manually-installed packages (not pulled in as deps):</span>
+<span class="cn">apt-mark showmanual</span>
+
+<span class="cm"># List explicitly installed packages (great for provisioning scripts):</span>
+<span class="cn">apt list</span> <span class="fl">--installed</span> 2>/dev/null | <span class="cn">awk -F'/' '{print $1}'</span></code></pre>
+
+  <h3>Holding kernel version during maintenance</h3>
+  <pre><code><span class="cm"># Never let the kernel auto-upgrade on a production server without planning</span>
+<span class="cn">uname -r</span>                           <span class="cm"># current kernel version</span>
+<span class="cn">apt-mark hold</span> linux-image-$(uname -r) linux-headers-$(uname -r)
+<span class="cn">apt-mark showhold</span>                   <span class="cm"># verify kernel is held</span>
+<span class="cm"># When ready for kernel upgrade: apt-mark unhold, then apt full-upgrade, then reboot</span></code></pre>
+</div>
+
+<!-- S7 -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon">🔄</div>
+    <div><div class="section-title">Modern vs Legacy Tools</div><div class="section-num">Section 07</div></div>
+  </div>
+
+  <table>
+    <tr><th>Legacy</th><th>Modern</th><th>Key difference</th></tr>
+    <tr><td><code>apt-get</code></td><td><code>apt</code></td><td>apt has progress bars, better output, auto-cleans. Use apt interactively; apt-get in scripts (stable, predictable output)</td></tr>
+    <tr><td><code>apt-cache search</code></td><td><code>apt search</code></td><td>Same functionality, apt is more readable</td></tr>
+    <tr><td><code>apt-key add</code></td><td><code>signed-by= in sources</code></td><td>apt-key is deprecated (Ubuntu 22.04+). Global keyring is insecure.</td></tr>
+    <tr><td><code>apt-get dist-upgrade</code></td><td><code>apt full-upgrade</code></td><td>Same behaviour, renamed for clarity</td></tr>
+    <tr><td><code>aptitude</code></td><td><code>apt</code></td><td>aptitude has a TUI and different resolver. Still useful for complex dep conflicts.</td></tr>
+    <tr><td>PPA via <code>add-apt-repository</code></td><td>Manual <code>sources.list.d/</code> + keyring</td><td>More control, more portable, required in containers</td></tr>
+  </table>
+
+  <div class="note note-senior">
+    <div class="note-label">💡 Senior Engineer Insight</div>
+    <p>In shell scripts and CI pipelines, prefer <code>apt-get</code> over <code>apt</code>. The <code>apt</code> command emits ANSI colour codes and progress bars designed for humans — these can corrupt CI logs and cause parsing failures. <code>apt-get</code> has stable, parseable output and has been the scripting-safe choice for decades. Use <code>apt-get -y -qq</code> for quiet, non-interactive scripting.</p>
+  </div>
+</div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon">⚠️</div>
+    <div><div class="section-title">Common Beginner Mistakes</div><div class="section-num">Section 08</div></div>
+  </div>
+  <ul>
+    <li><strong>Running <code>apt install</code> without <code>apt update</code> first:</strong> The local package index is stale. You install an outdated version or get "package not found" for packages that exist. Always <code>apt update</code> before installing.</li>
+    <li><strong>Confusing <code>apt remove</code> and <code>apt purge</code>:</strong> <code>remove</code> leaves config files behind. If you reinstall later, old configs take effect and cause confusing behaviour. Use <code>purge</code> when you want a clean slate.</li>
+    <li><strong>Forgetting <code>apt autoremove</code>:</strong> After removing a package, its dependencies remain installed as orphans. Over time this wastes significant disk space. Run <code>apt autoremove</code> regularly.</li>
+    <li><strong>Installing from random PPAs:</strong> PPAs (Personal Package Archives) can contain anything. They run scripts as root during install. A malicious or abandoned PPA is a serious security risk. Verify the PPA owner and package before adding it.</li>
+    <li><strong>Not pinning versions in production:</strong> Running <code>apt upgrade</code> on a production server without testing the new versions first causes unexpected breakage. Pin critical packages and upgrade deliberately.</li>
+    <li><strong>Adding the same repo twice:</strong> Causes "duplicate source" warnings and can confuse apt's priority system. Check <code>/etc/apt/sources.list.d/</code> before adding a new repo.</li>
+    <li><strong>Killing apt mid-run:</strong> Interrupting an install (Ctrl+C) can leave dpkg in a <code>half-installed</code> state. Never kill apt. If it happens, recover with <code>dpkg --configure -a</code>.</li>
+  </ul>
+</div>
+
+<!-- S9 -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon">🏗️</div>
+    <div><div class="section-title">Common Production Mistakes</div><div class="section-num">Section 09</div></div>
+  </div>
+  <ul>
+    <li><strong>Running <code>apt upgrade</code> on a live production server unplanned:</strong> A kernel upgrade requires a reboot. A library upgrade (openssl, glibc) can break running services. Always run upgrades in a maintenance window, after testing on staging.</li>
+    <li><strong>Not using <code>--no-install-recommends</code> in containers:</strong> Recommended packages bloat Docker images. A minimal nginx container that should be 50MB becomes 200MB because it pulled in postfix and other "recommended" packages.</li>
+    <li><strong>Leaving the apt cache in Docker images:</strong> Forgetting <code>apt-get clean && rm -rf /var/lib/apt/lists/*</code> in Dockerfiles adds hundreds of MB to image size and leaves stale index files.</li>
+    <li><strong>Not verifying GPG keys before adding repos:</strong> Adding a repo with an unverified key means trusting that server to deliver any package as root. Always verify the fingerprint matches the software vendor's published key.</li>
+    <li><strong>Using <code>apt full-upgrade</code> (<code>dist-upgrade</code>) without understanding it:</strong> Unlike <code>apt upgrade</code>, <code>full-upgrade</code> can remove packages to resolve dependencies. Removing the wrong package on a production server causes outages.</li>
+  </ul>
+</div>
+
+<!-- S10 -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-icon">🛠</div>
+    <div><div class="section-title">Debugging Workflow</div><div class="section-num">Section 10 — Recovering from broken package states</div></div>
+  </div>
+
+  <div class="note note-debug">
+    <div class="note-label">🛠 Package Troubleshooting Checklist</div>
+    <p>Work through these steps in order. Most package problems are solved by steps 1–4.</p>
+  </div>
+
+  <pre><code><span class="cm"># Problem: "dpkg was interrupted, you must manually run 'dpkg --configure -a'"</span>
+<span class="cn">dpkg --configure -a</span>               <span class="cm"># finish any interrupted installs</span>
+<span class="cm"># If that fails:</span>
+<span class="cn">apt install</span> <span class="fl">-f</span>                    <span class="cm"># fix broken dependencies</span>
+
+<span class="cm"># Problem: "E: Could not get lock /var/lib/dpkg/lock"</span>
+<span class="cm"># Another process is using apt/dpkg. Find it:</span>
+<span class="cn">lsof /var/lib/dpkg/lock</span>
+<span class="cm"># If it's a legitimate running process (apt, unattended-upgrades), wait</span>
+<span class="cm"># If it's a zombie/stale lock:</span>
+<span class="cn">ps aux</span> | <span class="cn">grep</span> <span class="st">"apt\|dpkg"</span>
+<span class="cm"># Only remove lock files if NO apt/dpkg process is actually running:</span>
+<span class="cm"># rm /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend</span>
+<span class="cm"># dpkg --configure -a</span>
+
+<span class="cm"># Problem: "Unmet dependencies" / "broken packages"</span>
+<span class="cn">apt install</span> <span class="fl">-f</span>                    <span class="cm"># attempt automatic fix</span>
+<span class="cn">apt-cache policy</span> <span class="st">packagename</span>     <span class="cm"># check what version is available vs installed</span>
+<span class="cn">apt-cache depends</span> <span class="st">packagename</span>    <span class="cm"># see what it needs</span>
+<span class="cn">dpkg</span> <span class="fl">-l</span> | <span class="cn">grep</span> <span class="st">"^..r\|^..H"</span>     <span class="cm"># find packages in error states</span>
+
+<span class="cm"># Problem: "Package not found" after you know it exists</span>
+<span class="cn">apt update</span>                        <span class="cm"># refresh the package index</span>
+<span class="cn">apt-cache search</span> <span class="st">partial-name</span>   <span class="cm"># maybe the package name is different</span>
+<span class="cn">apt-cache policy</span> <span class="st">packagename</span>    <span class="cm"># is it available from any configured repo?</span>
+
+<span class="cm"># Problem: apt update fails with "NO_PUBKEY ..."</span>
+<span class="cm"># A repo's GPG key is missing or expired</span>
+<span class="cn">apt-key adv --keyserver keyserver.ubuntu.com --recv-keys</span> <span class="st">KEYID</span>
+<span class="cm"># Or re-download and install the repo's keyring package</span>
+
+<span class="cm"># Problem: disk full during install</span>
+<span class="cn">apt clean</span>                         <span class="cm"># free /var/cache/apt/archives first</span>
+<span class="cn">apt autoremove</span>                    <span class="cm"># free orphaned packages</span>
+<span class="cn">df -h</span>                             <span class="cm"># verify space freed</span></code></pre>
+</div>
+
+<!-- S11 -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <div class="section-icon">🔐</div>
+    <div><div class="section-title">Security Considerations</div><div class="section-num">Section 11</div></div>
+  </div>
+
+  <ul>
+    <li><strong>Package installs run as root with arbitrary scripts:</strong> Post-install scripts from a package can execute anything. This is why only trusted repositories should be added. Every <code>apt install</code> is a root-level trust decision.</li>
+    <li><strong>Verify GPG key fingerprints out-of-band:</strong> Before adding a third-party repo, look up the GPG key fingerprint on the vendor's official website (not the README on GitHub). Verify it matches what you downloaded.</li>
+    <li><strong>Disable automatic upgrades for critical services:</strong> Unattended-upgrades is good for security patches but can break things. Configure it to notify rather than auto-apply for packages like <code>postgresql</code>, <code>nginx</code>, <code>nodejs</code>.</li>
+    <li><strong>Minimal installs reduce attack surface:</strong> Every installed package is a potential vulnerability. Use <code>--no-install-recommends</code>. In containers, start from <code>ubuntu:22.04-minimal</code> or Alpine. Don't install build tools on production.</li>
+    <li><strong>Audit installed packages regularly:</strong> <code>apt list --installed | wc -l</code>. Know what's on your servers. Unexpected packages are a compromise indicator.</li>
+  </ul>
+
+  <pre><code><span class="cm"># Check if any installed packages have known vulnerabilities:</span>
+<span class="cn">apt install</span> debsecan              <span class="cm"># Debian security analysis</span>
+<span class="cn">debsecan</span> <span class="fl">--suite</span> <span class="st">jammy</span>           <span class="cm"># report CVEs for installed packages</span>
+
+<span class="cm"># Verify package file integrity (detect tampering after install):</span>
+<span class="cn">debsums</span> <span class="st">nginx</span>                     <span class="cm"># check installed files against package checksums</span>
+<span class="cn">debsums</span> <span class="fl">-s</span>                        <span class="cm"># -s: silent, only show changed files</span></code></pre>
+</div>
+
+<!-- S12 -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <div class="section-icon">🚀</div>
+    <div><div class="section-title">Performance Considerations</div><div class="section-num">Section 12</div></div>
+  </div>
+  <ul>
+    <li><strong>apt update is slow on many repos:</strong> Each source.list entry triggers a separate HTTP request to download a compressed index. Minimise the number of repos. Use <code>apt-cacher-ng</code> or Nexus as a local apt proxy for teams or CI systems that install the same packages repeatedly.</li>
+    <li><strong><code>--no-install-recommends</code> drastically reduces install size:</strong> For servers and containers, this can save hundreds of MB. nginx recommends <code>fcgiwrap</code>, <code>nginx-doc</code>, and others you don't need on a bare web server.</li>
+    <li><strong>Snap startup latency:</strong> Snaps have higher startup latency than deb-installed binaries due to squashfs mount overhead. Don't use snaps for hot-path CLI tools in CI pipelines. The Firefox snap on Ubuntu 22.04 starts noticeably slower than the deb version.</li>
+    <li><strong>Pre-downloading packages:</strong> In CI pipelines that run apt install frequently, pre-download and cache <code>.deb</code> files in <code>/var/cache/apt/archives/</code> in your base Docker image to avoid repeated network fetches.</li>
+  </ul>
+</div>
+
+<!-- S13 -->
+<div class="section" id="s13">
+  <div class="section-header">
+    <div class="section-icon">💡</div>
+    <div><div class="section-title">Best Practices — Senior Level</div><div class="section-num">Section 13</div></div>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about package management</h4>
+    <ul>
+      <li>They never run <code>apt upgrade</code> on a production server without a plan: test on staging first, schedule a maintenance window, know which services need restart after.</li>
+      <li>They pin critical packages — especially databases, web servers, and language runtimes — to known-good versions. Upgrades are deliberate decisions, not accidents triggered by <code>apt upgrade</code>.</li>
+      <li>They treat every <code>apt install</code> as a security decision. They ask: do I trust this repo? Is this package from the official distro or a third party? What scripts does it run post-install?</li>
+      <li>They maintain a list of explicitly installed packages and use it in provisioning automation. A server's package state is reproducible, not hand-crafted and forgotten.</li>
+      <li>They use <code>apt-get</code> (not <code>apt</code>) in scripts. The stable, predictable output of <code>apt-get</code> is essential for reliable automation.</li>
+      <li>They keep Docker image layers efficient: one <code>RUN</code> layer per logical step, always clean up the apt cache in the same layer.</li>
+    </ul>
+  </div>
+
+  <pre><code><span class="cm"># Reproducible package list pattern (for Ansible/provisioning):</span>
+<span class="cm"># Generate list of manually-installed packages:</span>
+<span class="cn">apt-mark showmanual</span> | <span class="cn">sort</span> > packages.txt
+
+<span class="cm"># Restore on new system:</span>
+<span class="cn">apt-get update</span> && <span class="cn">xargs apt-get install</span> <span class="fl">-y</span> < packages.txt
+
+<span class="cm"># Safe upgrade workflow for production:</span>
+<span class="cn">apt update</span>
+<span class="cn">apt list</span> <span class="fl">--upgradable</span>              <span class="cm"># review what will change</span>
+<span class="cn">apt upgrade</span> <span class="fl">--dry-run</span>            <span class="cm"># simulate with full output</span>
+<span class="cm"># Review dry-run output carefully before proceeding</span>
+<span class="cn">apt upgrade</span>                       <span class="cm"># execute in maintenance window</span></code></pre>
+</div>
+
+<!-- S14 -->
+<div class="section" id="s14">
+  <div class="section-header">
+    <div class="section-icon">🔥</div>
+    <div><div class="section-title">Real Incident Scenarios</div><div class="section-num">Section 14</div></div>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>The Unplanned Kernel Upgrade</h4>
+    <p><strong>Scenario:</strong> An engineer runs <code>apt upgrade</code> on a production database server during business hours to "just install a security patch." apt upgrades the kernel. The engineer doesn't reboot (new kernel needs reboot). Two weeks later an automated script reboots the server for a different reason. The server comes up on the new kernel — which is incompatible with the custom DKMS module for the RAID controller. Server doesn't fully boot. Database offline for 4 hours.</p>
+    <p><strong>Prevention:</strong></p>
+    <pre style="margin:8px 0"><code><span class="cm"># Always hold kernel packages on production servers</span>
+<span class="cn">apt-mark hold</span> linux-image-$(uname -r) linux-headers-$(uname -r)
+<span class="cn">apt-mark hold</span> linux-image-generic linux-headers-generic
+<span class="cm"># Schedule kernel upgrades explicitly with full boot testing</span></code></pre>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>dpkg Lock During Deployment</h4>
+    <p><strong>Scenario:</strong> A deployment script runs <code>apt install myapp</code> on multiple servers simultaneously. On two servers the <code>unattended-upgrades</code> process was already running (triggered by a cron job). The deployment fails with "Could not get lock /var/lib/dpkg/lock". The deploy script panics, removes the lock file, and runs dpkg — corrupting the package state mid-install. Three packages end up half-installed.</p>
+    <p><strong>Recovery:</strong></p>
+    <pre style="margin:8px 0"><code><span class="cn">dpkg --configure -a</span>               <span class="cm"># finish half-configured packages</span>
+<span class="cn">apt install</span> <span class="fl">-f</span>                    <span class="cm"># fix broken deps</span>
+<span class="cn">apt-get install</span> <span class="fl">--reinstall</span> <span class="st">pkg1 pkg2 pkg3</span>  <span class="cm"># reinstall corrupted ones</span></code></pre>
+    <p><strong>Prevention:</strong> Use <code>systemctl stop unattended-upgrades</code> before deployment scripts, or use <code>flock</code> to wait for the dpkg lock rather than removing it.</p>
+  </div>
+</div>
+
+<!-- S15 -->
+<div class="section" id="s15">
+  <div class="section-header">
+    <div class="section-icon">🧪</div>
+    <div><div class="section-title">Hands-On Labs</div><div class="section-num">Section 15</div></div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge beginner">BEGINNER</span><span class="lab-title">Lab 1 — Install, Inspect, Remove</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Update the package index: <code>sudo apt update</code>. Read the output — identify how many package lists were fetched and if any failed.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Search for the <code>tree</code> package: <code>apt search tree</code>. Find the correct package name for directory tree display.</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Show package info before installing: <code>apt show tree</code>. Note the size, dependencies, and description.</span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Install it: <code>sudo apt install tree</code>. Run <code>tree /etc/apt</code> to verify it works.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Use dpkg to find all files it installed: <code>dpkg -L tree</code>. Which binary file does it place?</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Remove it without purging: <code>sudo apt remove tree</code>. Then purge: <code>sudo apt purge tree</code>. What's the difference in output?</span></div>
+      <div class="lab-step"><span class="step-num">7</span><span>Clean up: <code>sudo apt autoremove && sudo apt clean</code>. Check how much space was freed with <code>df -h</code>.</span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge intermediate">INTERMEDIATE</span><span class="lab-title">Lab 2 — dpkg Forensics & Package Holding</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Check the current status of curl: <code>dpkg -l curl</code>. Read the status columns (ii, rc, etc.).</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Find which package owns <code>/usr/bin/curl</code>: <code>dpkg -S /usr/bin/curl</code>.</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>List all files installed by curl: <code>dpkg -L curl</code>. Find its man page.</span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Hold curl at its current version: <code>sudo apt-mark hold curl</code>. Verify: <code>apt-mark showhold</code>.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Simulate an upgrade: <code>apt upgrade --dry-run</code>. Confirm curl is skipped due to hold.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Check available vs installed version: <code>apt-cache policy curl</code>. Read the "Installed" and "Candidate" lines.</span></div>
+      <div class="lab-step"><span class="step-num">7</span><span>Unhold: <code>sudo apt-mark unhold curl</code>.</span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge advanced">ADVANCED</span><span class="lab-title">Lab 3 — Add a Third-Party Repo (Docker CE)</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Follow the modern Docker repo setup: install prerequisites, download GPG key to <code>/etc/apt/keyrings/</code>.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Inspect the GPG key: <code>gpg --show-keys /etc/apt/keyrings/docker.gpg</code>. Record the fingerprint and verify it against Docker's official documentation.</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Add the sources.list.d entry with <code>signed-by=</code>. Run <code>apt update</code> and verify the Docker repo appears.</span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Check what's available: <code>apt-cache policy docker-ce</code>. Note the version candidates from Docker's repo.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Review the apt history log: <code>cat /var/log/apt/history.log | tail -30</code>. Find the install events from your labs today.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Check the dpkg log: <code>grep "$(date +%Y-%m-%d)" /var/log/dpkg.log</code>. Compare detail level with the apt history log.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- S16 -->
+<div class="section" id="s16">
+  <div class="section-header">
+    <div class="section-icon">💣</div>
+    <div><div class="section-title">Break It & Fix It</div><div class="section-num">Section 16</div></div>
+  </div>
+  <div class="note note-break">
+    <div class="note-label">🧪 Break It & Fix It — All recoverable on a test VM</div>
+  </div>
+  <ul>
+    <li><strong>Break 1 — Stale index:</strong> Delete the apt lists directory: <code>sudo rm -rf /var/lib/apt/lists/*</code>. Try <code>apt install tree</code>. Observe the "unable to locate package" error. Fix: <code>sudo apt update</code>.</li>
+    <li><strong>Break 2 — Simulate half-installed:</strong> Start installing a package and kill it mid-way with Ctrl+C. Run <code>dpkg -l | grep "^.H"</code> to see the half-installed state. Recover with <code>sudo dpkg --configure -a</code>.</li>
+    <li><strong>Break 3 — Bad sources entry:</strong> Add a deliberately wrong line to <code>/etc/apt/sources.list.d/bad.list</code>: <code>deb http://not-a-real-repo.example.com/ubuntu jammy main</code>. Run <code>apt update</code>. Observe the error. Fix: remove or correct the file.</li>
+    <li><strong>Break 4 — Double-add a repo:</strong> Add the same repo twice in two different files in <code>sources.list.d/</code>. Run <code>apt update</code>. Observe the "duplicate source" warning. Fix by removing one.</li>
+    <li><strong>Break 5 — The apt cache fill:</strong> Run <code>sudo apt-get download $(apt list --installed 2>/dev/null | awk -F/ 'NR>1{print $1}' | head -20)</code> to fill the cache. Check <code>du -sh /var/cache/apt/archives/</code>. Clean: <code>sudo apt clean</code>.</li>
+  </ul>
+</div>
+
+<!-- S17 -->
+<div class="section" id="s17">
+  <div class="section-header">
+    <div class="section-icon">🎯</div>
+    <div><div class="section-title">Mini Project</div><div class="section-num">Section 17</div></div>
+  </div>
+  <div class="capstone-box">
+    <h4 style="font-size:16px;font-weight:700;color:var(--acc4);margin-bottom:10px;">🎯 Mini Project: Server Bootstrap Script</h4>
+    <p>Write <code>bootstrap.sh</code> — a complete server provisioning script that sets up a fresh Ubuntu 22.04 server. It must:</p>
+    <ul>
+      <li>Run <code>apt-get update</code> and <code>apt-get upgrade -y</code> non-interactively (<code>DEBIAN_FRONTEND=noninteractive</code>)</li>
+      <li>Install a curated list of packages: <code>curl wget git vim htop tree net-tools unzip ufw fail2ban</code></li>
+      <li>Add the Docker CE repository using the modern signed-by method and install <code>docker-ce docker-ce-cli</code></li>
+      <li>Hold the kernel packages to prevent accidental kernel upgrades</li>
+      <li>Run <code>apt autoremove && apt clean</code> to clean up</li>
+      <li>Enable <code>unattended-upgrades</code> for security patches only</li>
+      <li>Log every operation with a timestamp to <code>/var/log/bootstrap.log</code></li>
+      <li>Exit with a non-zero code and a clear message if any step fails (use <code>set -e</code>)</li>
+      <li>Print a final summary: installed packages, held packages, docker version</li>
+    </ul>
+  </div>
+</div>
+
+<!-- S18 -->
+<div class="section" id="s18">
+  <div class="section-header">
+    <div class="section-icon">🏆</div>
+    <div><div class="section-title">Capstone Connection</div><div class="section-num">Section 18</div></div>
+  </div>
+  <p>The Phase 1 capstone (<code>sysreport.sh</code>) uses package manager knowledge in two ways:</p>
+  <ul>
+    <li><strong>Checking required packages are installed:</strong> Use <code>dpkg -l packagename</code> or <code>which command</code> to verify required tools exist before the script relies on them</li>
+    <li><strong>Reporting available upgrades:</strong> <code>apt list --upgradable 2>/dev/null | wc -l</code> tells you how many packages are waiting for updates — useful security metric in a sysreport</li>
+    <li><strong>The bootstrap mini project IS the capstone setup step:</strong> A production-ready sysreport.sh assumes the server was provisioned correctly, including the packages the script needs</li>
+  </ul>
+</div>
+
+<!-- S19 -->
+<div class="section" id="s19">
+  <div class="section-header">
+    <div class="section-icon">❓</div>
+    <div><div class="section-title">Interview Questions</div><div class="section-num">Section 19 — Junior to Senior</div></div>
+  </div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is the difference between <code>apt update</code> and <code>apt upgrade</code>?</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is the difference between <code>apt remove</code> and <code>apt purge</code>?</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is dpkg and how does it relate to apt?</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">How do you find which package installed a specific file (e.g., <code>/usr/bin/curl</code>)?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">What does <code>ii</code>, <code>rc</code>, and <code>iH</code> mean in the output of <code>dpkg -l</code>?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">How do you hold a package at its current version? Why is this important in production?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">What is the difference between <code>apt upgrade</code> and <code>apt full-upgrade</code>? When would you use each?</div><div class="iq-hint">Hint: dist-upgrade, package removal</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">Why is <code>apt-key add</code> deprecated, and what is the modern replacement?</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">Your deployment script fails with "Could not get lock /var/lib/dpkg/lock". What do you do? Walk me through your decision process — specifically when is it safe to remove the lock file, and when is it not?</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">How would you manage package versions across 200 Ubuntu servers to ensure they all run the same software versions, and prevent a package upgrade from causing an outage?</div><div class="iq-hint">Hint: pinning, apt proxy/mirror, automation tools, immutable infrastructure</div></div>
+
+  <hr class="divider">
+  <h3>Self-test questions</h3>
+  <ol>
+    <li>What command refreshes the local apt package index without installing anything?</li>
+    <li>Where does apt download and cache <code>.deb</code> files before installing them?</li>
+    <li>What file is the source of truth for what packages are installed?</li>
+    <li>How do you safely edit <code>/etc/sudoers</code>? (Trick: same pattern applies to apt configs)</li>
+    <li>What does <code>DEBIAN_FRONTEND=noninteractive</code> do and when do you need it?</li>
+    <li>How do you find out what a package will install before running the install?</li>
+    <li>What command lists all packages that were explicitly installed (not pulled in as dependencies)?</li>
+    <li>A package install was interrupted. What command do you run first?</li>
+    <li>Why should you use <code>apt-get</code> instead of <code>apt</code> in shell scripts?</li>
+    <li>What is the difference between snap and deb packages architecturally?</li>
+  </ol>
+</div>
+
+<!-- S20 -->
+<div class="section" id="s20">
+  <div class="section-header">
+    <div class="section-icon">📝</div>
+    <div><div class="section-title">Cheat Sheet & Revision Summary</div><div class="section-num">Section 20</div></div>
+  </div>
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>Update & Install</h4>
+      <div class="cheat-row"><span class="cheat-cmd">apt update</span><span class="cheat-desc">refresh index (always first)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt upgrade</span><span class="cheat-desc">upgrade all packages</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt install pkg</span><span class="cheat-desc">install package</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt install pkg=version</span><span class="cheat-desc">install specific version</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt install -f</span><span class="cheat-desc">fix broken dependencies</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Remove & Clean</h4>
+      <div class="cheat-row"><span class="cheat-cmd">apt remove pkg</span><span class="cheat-desc">remove (keep configs)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt purge pkg</span><span class="cheat-desc">remove + configs</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt autoremove</span><span class="cheat-desc">remove orphan deps</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt clean</span><span class="cheat-desc">clear .deb cache</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt autoclean</span><span class="cheat-desc">clear only old .debs</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Search & Info</h4>
+      <div class="cheat-row"><span class="cheat-cmd">apt search name</span><span class="cheat-desc">search packages</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt show pkg</span><span class="cheat-desc">package details</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt list --installed</span><span class="cheat-desc">all installed</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt list --upgradable</span><span class="cheat-desc">pending upgrades</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-cache policy pkg</span><span class="cheat-desc">installed vs candidate</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Hold / Pin</h4>
+      <div class="cheat-row"><span class="cheat-cmd">apt-mark hold pkg</span><span class="cheat-desc">prevent upgrades</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-mark unhold pkg</span><span class="cheat-desc">allow upgrades again</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-mark showhold</span><span class="cheat-desc">list held packages</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-mark showmanual</span><span class="cheat-desc">explicitly installed</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt upgrade --dry-run</span><span class="cheat-desc">simulate upgrades</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>dpkg</h4>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg -i pkg.deb</span><span class="cheat-desc">install local .deb</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg -l [pkg]</span><span class="cheat-desc">list / status</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg -L pkg</span><span class="cheat-desc">files installed by pkg</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg -S /path</span><span class="cheat-desc">which pkg owns file</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg --configure -a</span><span class="cheat-desc">fix interrupted install</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Key Files</h4>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/apt/sources.list</span><span class="cheat-desc">main repo list</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/apt/sources.list.d/</span><span class="cheat-desc">extra repos</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/apt/keyrings/</span><span class="cheat-desc">GPG keys</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/var/lib/dpkg/status</span><span class="cheat-desc">installed pkg DB</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/var/log/apt/history.log</span><span class="cheat-desc">apt audit log</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Scripting</h4>
+      <div class="cheat-row"><span class="cheat-cmd">DEBIAN_FRONTEND=noninteractive</span><span class="cheat-desc">no prompts</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-get install -y -qq</span><span class="cheat-desc">quiet + auto-yes</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">--no-install-recommends</span><span class="cheat-desc">minimal install</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-get clean</span><span class="cheat-desc">post-install cleanup</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">rm -rf /var/lib/apt/lists/*</span><span class="cheat-desc">clear Docker cache</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Troubleshoot</h4>
+      <div class="cheat-row"><span class="cheat-cmd">dpkg --configure -a</span><span class="cheat-desc">fix interrupted</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt install -f</span><span class="cheat-desc">fix broken deps</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">lsof /var/lib/dpkg/lock</span><span class="cheat-desc">who holds lock</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">apt-cache depends pkg</span><span class="cheat-desc">what pkg needs</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">cat /var/log/dpkg.log</span><span class="cheat-desc">low-level events</span></div>
+    </div>
+  </div>
+
+  <div class="recap" style="margin-top:24px;">
+    <h4>📝 One-Day Revision Plan</h4>
+    <ul>
+      <li><strong style="color:var(--acc);">10 min</strong> — Draw the apt → dpkg → disk flow from memory. Add the key files at each stage.</li>
+      <li><strong style="color:var(--acc);">20 min</strong> — Run Lab 1 entirely from memory. No notes.</li>
+      <li><strong style="color:var(--acc);">15 min</strong> — Practice the troubleshooting commands in section 10 on your test VM.</li>
+      <li><strong style="color:var(--acc);">15 min</strong> — Answer the 10 self-test questions aloud. Look up anything you hesitate on.</li>
+    </ul>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about package management</h4>
+    <p style="color:var(--text2);font-size:14px;line-height:1.75;">Package management is infrastructure. Senior engineers know that <strong style="color:var(--text);">every package install is a trust decision</strong> — you're running arbitrary root-level scripts from whoever maintains that package. They hold production package versions deliberately and upgrade on a schedule. They know the difference between the apt metadata cache (<code>/var/lib/apt/lists/</code>) and the download cache (<code>/var/cache/apt/archives/</code>) and can clean them independently. In automation they always use <code>apt-get</code> for predictable output, always combine <code>update + install + clean</code> in one Docker RUN layer, and always check <code>apt list --upgradable</code> before deciding whether to upgrade — never blindly.</p>
+  </div>
+</div>
+
+</main>
+</div>
+
+<button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<script>
+const navIds=['overview','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20'];
+function updateNav(){
+  const st=window.scrollY,dh=document.documentElement.scrollHeight-window.innerHeight;
+  const pct=dh>0?Math.round((st/dh)*100):0;
+  document.getElementById('progress').style.width=pct+'%';
+  document.getElementById('prog-label').textContent=pct+'% read';
+  let cur='overview';
+  for(const id of navIds){const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<=120)cur=id;}
+  document.querySelectorAll('.nav-item').forEach(item=>{item.classList.toggle('active',item.getAttribute('href')==='#'+cur);});
+}
+window.addEventListener('scroll',updateNav);
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',function(){
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    this.classList.add('active');
+    const sb=document.querySelector('.sidebar'),it=this.offsetTop;
+    if(it>sb.scrollTop+sb.clientHeight-80||it<sb.scrollTop+60)sb.scrollTop=it-sb.clientHeight/2;
+  });
+});
+updateNav();
+</script>
+</body>
+</html>

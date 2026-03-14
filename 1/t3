@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T3 — Users & Groups | Phase 1 Linux Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0c0e10;
+  --surface: #111418;
+  --surface2: #171b20;
+  --surface3: #1d2228;
+  --border: #252c34;
+  --border2: #303840;
+  --text: #e2e6ec;
+  --text2: #8a95a3;
+  --text3: #505a65;
+  --acc: #f97316;
+  --acc2: #38bdf8;
+  --acc3: #4ade80;
+  --acc4: #e879f9;
+  --acc5: #facc15;
+  --acc6: #f87171;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; min-height: 100vh; }
+.app { display: flex; min-height: 100vh; }
+
+.sidebar { width: 255px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100; }
+.sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+.phase-badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 8px; background: rgba(249,115,22,0.12); color: var(--acc); border-radius: 4px; border: 1px solid rgba(249,115,22,0.25); margin-bottom: 8px; letter-spacing: 0.05em; }
+.sidebar-header h1 { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.sidebar-header p { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); padding: 14px 16px 5px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 16px; font-size: 12.5px; color: var(--text2); cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; text-decoration: none; }
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--acc); border-left-color: var(--acc); background: rgba(249,115,22,0.06); }
+.nav-icon { font-size: 13px; width: 16px; flex-shrink: 0; }
+.progress-bar { margin: 14px 16px 4px; background: var(--surface3); border-radius: 4px; height: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--acc); border-radius: 4px; width: 0%; transition: width 0.2s; }
+.progress-label { font-family: var(--mono); font-size: 10px; color: var(--text3); margin: 0 16px 14px; }
+
+.main { margin-left: 255px; flex: 1; max-width: 920px; padding: 40px 48px; }
+
+.hero { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+.topic-tag { font-family: var(--mono); font-size: 11px; color: var(--acc); letter-spacing: 0.08em; margin-bottom: 12px; display: block; }
+.hero h1 { font-size: 42px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+.hero h1 span { color: var(--acc); }
+.hero-meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+.meta-chip { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; color: var(--text2); }
+.meta-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+.hero-desc { font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 680px; }
+.outcomes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 20px; }
+.outcome-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text2); padding: 10px 14px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+.outcome-item::before { content: '✓'; color: var(--acc); font-weight: 700; flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+
+.section { margin-bottom: 54px; scroll-margin-top: 24px; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.section-icon { font-size: 18px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+.section-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.section-num { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 2px; }
+h3 { font-size: 14px; font-weight: 700; color: var(--acc2); margin: 20px 0 8px; font-family: var(--mono); letter-spacing: 0.03em; }
+p { color: var(--text2); line-height: 1.75; margin-bottom: 12px; }
+p strong { color: var(--text); font-weight: 600; }
+
+.note { border-radius: 8px; padding: 14px 18px; margin: 14px 0; border-left: 3px solid; }
+.note-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px; font-family: var(--mono); }
+.note p, .note li { margin: 0; font-size: 14px; }
+.note ul { padding-left: 18px; }
+.note-mental { background: rgba(249,115,22,0.06); border-color: var(--acc); }
+.note-mental .note-label { color: var(--acc); }
+.note-cmd { background: rgba(56,189,248,0.06); border-color: var(--acc2); }
+.note-cmd .note-label { color: var(--acc2); }
+.note-files { background: rgba(250,204,21,0.06); border-color: var(--acc5); }
+.note-files .note-label { color: var(--acc5); }
+.note-hood { background: rgba(232,121,249,0.06); border-color: var(--acc4); }
+.note-hood .note-label { color: var(--acc4); }
+.note-real { background: rgba(74,222,128,0.06); border-color: var(--acc3); }
+.note-real .note-label { color: var(--acc3); }
+.note-warn { background: rgba(239,68,68,0.06); border-color: var(--red); }
+.note-warn .note-label { color: var(--red); }
+.note-debug { background: rgba(234,179,8,0.07); border-color: var(--yellow); }
+.note-debug .note-label { color: var(--yellow); }
+.note-sec { background: rgba(248,113,113,0.07); border-color: #f87171; }
+.note-sec .note-label { color: #f87171; }
+.note-perf { background: rgba(56,189,248,0.06); border-color: #22d3ee; }
+.note-perf .note-label { color: #22d3ee; }
+.note-senior { background: rgba(232,121,249,0.07); border-color: var(--acc4); }
+.note-senior .note-label { color: var(--acc4); }
+.note-try { background: rgba(249,115,22,0.06); border-color: var(--acc); }
+.note-try .note-label { color: var(--acc); }
+.note-break { background: rgba(248,113,113,0.06); border-color: var(--acc6); }
+.note-break .note-label { color: var(--acc6); }
+
+pre { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; overflow-x: auto; margin: 12px 0; font-family: var(--mono); font-size: 13px; line-height: 1.75; }
+code { font-family: var(--mono); font-size: 13px; background: var(--surface3); padding: 2px 6px; border-radius: 4px; color: var(--acc2); }
+pre code { background: none; padding: 0; color: var(--text); }
+.cm { color: var(--text3); }
+.cn { color: var(--acc3); }
+.fl { color: var(--acc5); }
+.st { color: var(--acc2); }
+.kw { color: var(--acc); }
+
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+th { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); text-align: left; }
+td { padding: 9px 12px; border: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+td code { font-size: 12px; }
+tr:hover td { background: var(--surface2); }
+
+ul, ol { padding-left: 20px; margin: 10px 0; }
+li { color: var(--text2); margin-bottom: 6px; line-height: 1.65; font-size: 14px; }
+li strong { color: var(--text); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+/* File anatomy diagram */
+.file-anatomy { font-family: var(--mono); font-size: 13px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin: 14px 0; line-height: 2.2; overflow-x: auto; }
+.fa-field { color: var(--acc2); }
+.fa-sep { color: var(--text3); }
+.fa-val { color: var(--acc3); }
+.fa-comment { color: var(--text3); font-size: 12px; }
+
+/* User card */
+.user-card { display: flex; align-items: center; gap: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin: 10px 0; }
+.user-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; font-family: var(--mono); flex-shrink: 0; }
+.avatar-root { background: rgba(248,113,113,0.15); color: var(--acc6); }
+.avatar-sys { background: rgba(250,204,21,0.12); color: var(--acc5); }
+.avatar-user { background: rgba(56,189,248,0.12); color: var(--acc2); }
+.user-info h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.user-info p { font-size: 12px; color: var(--text3); margin: 0; font-family: var(--mono); }
+.user-tags { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.tag { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.tag-danger { background: rgba(248,113,113,0.12); color: var(--acc6); }
+.tag-warn { background: rgba(250,204,21,0.12); color: var(--acc5); }
+.tag-info { background: rgba(56,189,248,0.12); color: var(--acc2); }
+.tag-ok { background: rgba(74,222,128,0.12); color: var(--acc3); }
+
+/* sudo flow diagram */
+.sudo-flow { display: flex; align-items: center; gap: 0; margin: 16px 0; overflow-x: auto; }
+.sf-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; text-align: center; flex-shrink: 0; }
+.sf-box .sf-title { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text); }
+.sf-box .sf-sub { font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+.sf-arrow { color: var(--text3); font-size: 18px; padding: 0 10px; flex-shrink: 0; }
+.sf-check { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.3); }
+.sf-check .sf-title { color: var(--acc3); }
+.sf-deny { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.3); }
+.sf-deny .sf-title { color: var(--acc6); }
+
+/* Lab */
+.lab-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+.lab-header { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--surface3); border-bottom: 1px solid var(--border); }
+.lab-badge { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+.lab-badge.beginner { background: rgba(34,197,94,0.15); color: var(--green); }
+.lab-badge.intermediate { background: rgba(234,179,8,0.15); color: var(--yellow); }
+.lab-badge.advanced { background: rgba(239,68,68,0.15); color: var(--red); }
+.lab-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.lab-body { padding: 14px 16px; }
+.lab-step { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; font-size: 13.5px; color: var(--text2); }
+.step-num { font-family: var(--mono); font-size: 11px; background: var(--surface3); border: 1px solid var(--border); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; flex-shrink: 0; color: var(--acc); margin-top: 1px; }
+
+/* Incident */
+.incident { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
+.incident-label { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--red); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.incident h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+/* Interview */
+.iq-item { border-left: 2px solid var(--border2); padding: 9px 16px; margin: 7px 0; transition: border-color 0.15s; }
+.iq-item:hover { border-left-color: var(--acc); }
+.iq-level { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; }
+.level-jr { color: var(--green); }
+.level-mid { color: var(--yellow); }
+.level-sr { color: var(--acc6); }
+.iq-q { font-size: 14px; color: var(--text); font-weight: 500; }
+.iq-hint { font-size: 12px; color: var(--text3); margin-top: 3px; font-style: italic; }
+
+.cheat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.cheat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.cheat-card h4 { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--acc); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+.cheat-row { display: flex; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+.cheat-cmd { font-family: var(--mono); color: var(--acc2); flex-shrink: 0; min-width: 150px; font-size: 12px; }
+.cheat-desc { color: var(--text3); font-size: 12px; }
+
+.senior-block { background: linear-gradient(135deg, rgba(232,121,249,0.06) 0%, rgba(249,115,22,0.04) 100%); border: 1px solid rgba(232,121,249,0.2); border-radius: 10px; padding: 20px 24px; margin: 20px 0; }
+.senior-block h4 { font-size: 15px; font-weight: 700; color: var(--acc4); margin-bottom: 10px; }
+.recap { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+.recap h4 { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--acc); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+.capstone-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; border-left: 3px solid var(--acc3); }
+
+.mob-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 200; background: var(--acc); color: var(--bg); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 18px; cursor: pointer; }
+@media (max-width: 800px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.2s; }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 24px 20px; }
+  .mob-toggle { display: flex; align-items: center; justify-content: center; }
+  .hero h1 { font-size: 28px; }
+  .sudo-flow { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="phase-badge">PHASE 1 · TOPIC 3</span>
+    <h1>Users & Groups</h1>
+    <p>Linux Mastery Curriculum</p>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  <div class="progress-label" id="prog-label">0% read</div>
+  <div class="nav-section-label">Foundations</div>
+  <a class="nav-item" href="#overview"><span class="nav-icon">▶</span>Overview & Outcomes</a>
+  <a class="nav-item" href="#s1"><span class="nav-icon">🧠</span>Beginner Intuition</a>
+  <a class="nav-item" href="#s2"><span class="nav-icon">📖</span>Core Fundamentals</a>
+  <a class="nav-item" href="#s3"><span class="nav-icon">⚙️</span>Commands & Syntax</a>
+  <a class="nav-item" href="#s4"><span class="nav-icon">📁</span>Files & Configs</a>
+  <a class="nav-item" href="#s5"><span class="nav-icon">🔬</span>Under the Hood</a>
+  <div class="nav-section-label">Practical</div>
+  <a class="nav-item" href="#s6"><span class="nav-icon">🏭</span>Real-World Usage</a>
+  <a class="nav-item" href="#s7"><span class="nav-icon">🔄</span>Modern vs Legacy</a>
+  <a class="nav-item" href="#s8"><span class="nav-icon">⚠️</span>Beginner Mistakes</a>
+  <a class="nav-item" href="#s9"><span class="nav-icon">🏗️</span>Production Mistakes</a>
+  <a class="nav-item" href="#s10"><span class="nav-icon">🛠</span>Debug Workflow</a>
+  <div class="nav-section-label">Senior Level</div>
+  <a class="nav-item" href="#s11"><span class="nav-icon">🔐</span>Security</a>
+  <a class="nav-item" href="#s12"><span class="nav-icon">🚀</span>Performance</a>
+  <a class="nav-item" href="#s13"><span class="nav-icon">💡</span>Best Practices</a>
+  <a class="nav-item" href="#s14"><span class="nav-icon">🔥</span>Incident Scenarios</a>
+  <div class="nav-section-label">Labs & Review</div>
+  <a class="nav-item" href="#s15"><span class="nav-icon">🧪</span>Hands-On Labs</a>
+  <a class="nav-item" href="#s16"><span class="nav-icon">💣</span>Break & Fix</a>
+  <a class="nav-item" href="#s17"><span class="nav-icon">🎯</span>Mini Project</a>
+  <a class="nav-item" href="#s18"><span class="nav-icon">🏆</span>Capstone Connection</a>
+  <a class="nav-item" href="#s19"><span class="nav-icon">❓</span>Interview Questions</a>
+  <a class="nav-item" href="#s20"><span class="nav-icon">📝</span>Cheat Sheet</a>
+</nav>
+
+<main class="main">
+
+<!-- Hero -->
+<div class="hero" id="overview">
+  <span class="topic-tag">PHASE 1 · TOPIC 3 OF 8 · EST. 3–4 HOURS</span>
+  <h1>Users <span>&</span> Groups</h1>
+  <div class="hero-meta">
+    <div class="meta-chip"><div class="dot" style="background:var(--acc)"></div>3–4 hours study</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc2)"></div>Beginner → Senior</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc5)"></div>Ubuntu 22.04 LTS</div>
+    <div class="meta-chip"><div class="dot" style="background:var(--acc4)"></div>Prereq: T1 + T2</div>
+  </div>
+  <p class="hero-desc">Linux is a multi-user operating system — every process, every file, and every action belongs to a user. The user and group model is the core security boundary of the entire OS. Get this wrong in production and you either lock out your own applications or open holes for attackers.</p>
+  <div class="outcomes-grid">
+    <div class="outcome-item">Understand UIDs, GIDs, and how the kernel uses them</div>
+    <div class="outcome-item">Create, modify, and delete users and groups confidently</div>
+    <div class="outcome-item">Explain how sudo works and configure /etc/sudoers safely</div>
+    <div class="outcome-item">Read and write /etc/passwd, /etc/shadow, /etc/group</div>
+    <div class="outcome-item">Switch users, run commands as another user</div>
+    <div class="outcome-item">Create service accounts for applications (principle of least privilege)</div>
+    <div class="outcome-item">Understand password policies, aging, and account locking</div>
+    <div class="outcome-item">Debug "permission denied" and "sudo: user is not in the sudoers file"</div>
+  </div>
+</div>
+
+<!-- S1 -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon">🧠</div>
+    <div><div class="section-title">Beginner Intuition</div><div class="section-num">Section 01 — Simple Mental Model</div></div>
+  </div>
+
+  <div class="note note-mental">
+    <div class="note-label">🧠 Mental Model</div>
+    <p>Think of Linux as a secure office building. Each <strong>user</strong> has a badge with a unique ID number (UID). Each <strong>group</strong> is a department with its own ID (GID). Resources (files, devices, services) have locks that say: "badge 1001 can read, department 33 can write." The kernel checks your badge against the lock on every single operation. It never trusts names — it only ever reads the ID numbers.</p>
+  </div>
+
+  <p>There are three types of users you'll encounter:</p>
+
+  <div class="user-card">
+    <div class="user-avatar avatar-root">R</div>
+    <div class="user-info"><h4>root</h4><p>UID 0 · /root · /bin/bash</p></div>
+    <div class="user-tags"><span class="tag tag-danger">UID 0</span><span class="tag tag-danger">superuser</span><span class="tag tag-danger">no restrictions</span></div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-avatar avatar-sys">S</div>
+    <div class="user-info"><h4>www-data, nobody, postgres...</h4><p>UID 33–999 · no login shell · service accounts</p></div>
+    <div class="user-tags"><span class="tag tag-warn">system user</span><span class="tag tag-warn">no login</span><span class="tag tag-info">runs services</span></div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-avatar avatar-user">U</div>
+    <div class="user-info"><h4>ubuntu, alice, bob...</h4><p>UID 1000+ · /home/username · /bin/bash</p></div>
+    <div class="user-tags"><span class="tag tag-ok">regular user</span><span class="tag tag-ok">UID 1000+</span><span class="tag tag-info">has home dir</span></div>
+  </div>
+
+  <div class="note note-try">
+    <div class="note-label">✅ Try It Now</div>
+    <p>Run <code>id</code> right now. You'll see your UID, GID, and all groups you belong to. Run <code>id root</code> to see root's IDs. Run <code>cat /etc/passwd | head -5</code> to see the first five user entries on your system.</p>
+  </div>
+</div>
+
+<!-- S2 -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon">📖</div>
+    <div><div class="section-title">Core Fundamentals</div><div class="section-num">Section 02 — The user model, UIDs, GIDs, and sudo</div></div>
+  </div>
+
+  <h3>UIDs and GIDs</h3>
+  <p>Every user has a <strong>UID (User ID)</strong> — a non-negative integer. Every group has a <strong>GID (Group ID)</strong>. The kernel identifies users exclusively by UID. Usernames are just human-readable labels stored in <code>/etc/passwd</code> and resolved by the C library.</p>
+
+  <table>
+    <tr><th>UID Range</th><th>Type</th><th>Examples</th></tr>
+    <tr><td><code>0</code></td><td>Root / superuser</td><td>root only. UID 0 = god mode — kernel bypasses all permission checks.</td></tr>
+    <tr><td><code>1–99</code></td><td>Static system users</td><td>daemon, bin, sys — defined by distro maintainers</td></tr>
+    <tr><td><code>100–999</code></td><td>Dynamic system users</td><td>www-data (33), postgres (111), nobody (65534)</td></tr>
+    <tr><td><code>1000+</code></td><td>Regular users</td><td>ubuntu (1000), alice (1001), bob (1002)</td></tr>
+    <tr><td><code>65534</code></td><td>nobody</td><td>Used for unmapped UIDs (NFS, containers)</td></tr>
+  </table>
+
+  <h3>Primary group vs supplementary groups</h3>
+  <p>Every user has exactly one <strong>primary group</strong> (stored in <code>/etc/passwd</code>, used as default GID for new files). They can also belong to many <strong>supplementary groups</strong> (stored in <code>/etc/group</code>). When you run <code>id</code>, you see all of them.</p>
+
+  <pre><code><span class="cn">id</span> ubuntu
+<span class="cm"># uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),4(adm),24(cdrom),27(sudo),1001(docker)</span>
+<span class="cm">#                  ↑ primary group   ↑ supplementary groups</span>
+<span class="cm"># This user can: sudo (27), use docker (1001), read system logs (4:adm)</span></code></pre>
+
+  <h3>How sudo works</h3>
+  <p><code>sudo</code> (superuser do) allows a permitted user to run a command as root (or another user) after verifying their identity. It does NOT give you root access permanently — it elevates just for that one command, then drops back.</p>
+
+  <div class="sudo-flow">
+    <div class="sf-box"><div class="sf-title">User types</div><div class="sf-sub">sudo cmd</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-box"><div class="sf-title">sudo reads</div><div class="sf-sub">/etc/sudoers</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-box"><div class="sf-title">Is user allowed?</div><div class="sf-sub">username + host + cmd</div></div>
+    <div class="sf-arrow">→</div>
+    <div class="sf-box sf-check"><div class="sf-title">YES → ask password</div><div class="sf-sub">run as root</div></div>
+    <div class="sf-arrow">|</div>
+    <div class="sf-box sf-deny"><div class="sf-title">NO → deny</div><div class="sf-sub">log the attempt</div></div>
+  </div>
+
+  <pre><code><span class="cm"># Basic sudo usage</span>
+<span class="cn">sudo</span> <span class="st">apt update</span>              <span class="cm"># run command as root</span>
+<span class="cn">sudo</span> <span class="fl">-u www-data</span> <span class="st">whoami</span>    <span class="cm"># run as a specific user</span>
+<span class="cn">sudo</span> <span class="fl">-i</span>                     <span class="cm"># open interactive root shell (login shell)</span>
+<span class="cn">sudo</span> <span class="fl">-s</span>                     <span class="cm"># open root shell (non-login, keeps env)</span>
+<span class="cn">sudo</span> <span class="fl">-l</span>                     <span class="cm"># list what THIS user is allowed to sudo</span>
+<span class="cn">sudo</span> <span class="fl">-l -U alice</span>            <span class="cm"># list what alice is allowed to sudo (as root)</span>
+
+<span class="cm"># sudo caches credentials for 15 minutes by default</span>
+<span class="cn">sudo</span> <span class="fl">-k</span>                     <span class="cm"># invalidate cached credentials immediately</span></code></pre>
+
+  <h3>su — Switch User</h3>
+  <pre><code><span class="cn">su</span> <span class="st">alice</span>                   <span class="cm"># switch to alice (needs alice's password)</span>
+<span class="cn">su</span> <span class="fl">-</span> <span class="st">alice</span>                  <span class="cm"># switch to alice with LOGIN shell (loads her env)</span>
+<span class="cn">su</span> <span class="fl">-</span>                        <span class="cm"># switch to root (needs root password)</span>
+<span class="cn">sudo su</span> <span class="fl">-</span>                   <span class="cm"># become root via sudo (uses YOUR password)</span>
+<span class="cn">exit</span>                        <span class="cm"># return to previous user</span>
+
+<span class="cm"># Difference: su vs sudo su -</span>
+<span class="cm"># su - needs the TARGET user's password</span>
+<span class="cm"># sudo su - needs YOUR password + sudo permission</span>
+<span class="cm"># On cloud servers, root password is often not set — use sudo su -</span></code></pre>
+</div>
+
+<!-- S3 -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon">⚙️</div>
+    <div><div class="section-title">Commands & Syntax</div><div class="section-num">Section 03 — Every user and group management command</div></div>
+  </div>
+
+  <h3>User management</h3>
+  <pre><code><span class="cm"># useradd — low-level user creation (manual setup needed)</span>
+<span class="cn">useradd</span> <span class="st">alice</span>                          <span class="cm"># create user (no home dir by default on some distros)</span>
+<span class="cn">useradd</span> <span class="fl">-m</span> <span class="st">alice</span>                       <span class="cm"># -m: create home directory</span>
+<span class="cn">useradd</span> <span class="fl">-m -s /bin/bash</span> <span class="st">alice</span>         <span class="cm"># set login shell explicitly</span>
+<span class="cn">useradd</span> <span class="fl">-m -u 1500 -g developers</span> <span class="st">alice</span> <span class="cm"># set UID and primary group</span>
+<span class="cn">useradd</span> <span class="fl">-m -G sudo,docker</span> <span class="st">alice</span>       <span class="cm"># add to supplementary groups</span>
+<span class="cn">useradd</span> <span class="fl">-r -s /sbin/nologin</span> <span class="st">myapp</span>     <span class="cm"># -r: system account, no login shell</span>
+<span class="cn">useradd</span> <span class="fl">-M -s /sbin/nologin</span> <span class="st">myapp</span>     <span class="cm"># -M: NO home directory (for services)</span>
+
+<span class="cm"># adduser — high-level, interactive, Debian/Ubuntu preferred</span>
+<span class="cn">adduser</span> <span class="st">alice</span>                          <span class="cm"># interactive: asks password, full name, etc.</span>
+<span class="cn">adduser</span> <span class="st">alice sudo</span>                     <span class="cm"># add alice to sudo group</span>
+<span class="cn">adduser</span> <span class="fl">--system --no-create-home</span> <span class="st">myapp</span> <span class="cm"># create system account</span>
+
+<span class="cm"># usermod — modify existing user</span>
+<span class="cn">usermod</span> <span class="fl">-aG docker</span> <span class="st">alice</span>              <span class="cm"># APPEND to group docker (-a is critical!)</span>
+<span class="cn">usermod</span> <span class="fl">-aG sudo,adm</span> <span class="st">alice</span>           <span class="cm"># append to multiple groups</span>
+<span class="cn">usermod</span> <span class="fl">-s /bin/zsh</span> <span class="st">alice</span>            <span class="cm"># change login shell</span>
+<span class="cn">usermod</span> <span class="fl">-d /new/home</span> <span class="st">alice</span>           <span class="cm"># change home directory</span>
+<span class="cn">usermod</span> <span class="fl">-l newname</span> <span class="st">alice</span>             <span class="cm"># rename username</span>
+<span class="cn">usermod</span> <span class="fl">-L</span> <span class="st">alice</span>                      <span class="cm"># LOCK account (prefix ! in shadow)</span>
+<span class="cn">usermod</span> <span class="fl">-U</span> <span class="st">alice</span>                      <span class="cm"># UNLOCK account</span>
+<span class="cn">usermod</span> <span class="fl">-e 2025-12-31</span> <span class="st">alice</span>          <span class="cm"># set account expiry date</span>
+
+<span class="cm"># userdel — delete user</span>
+<span class="cn">userdel</span> <span class="st">alice</span>                          <span class="cm"># delete user, KEEP home directory</span>
+<span class="cn">userdel</span> <span class="fl">-r</span> <span class="st">alice</span>                       <span class="cm"># delete user AND home directory AND mail spool</span></code></pre>
+
+  <div class="note note-warn">
+    <div class="note-label">⚠️ Critical: usermod -aG vs usermod -G</div>
+    <p><code>usermod -G docker alice</code> (without <code>-a</code>) <strong>replaces ALL supplementary groups</strong> with only docker. Alice loses sudo access, loses all other groups. Always use <code>-aG</code> to <strong>append</strong>. This mistake has locked engineers out of production servers.</p>
+  </div>
+
+  <h3>Password management</h3>
+  <pre><code><span class="cn">passwd</span>                               <span class="cm"># change YOUR password</span>
+<span class="cn">passwd</span> <span class="st">alice</span>                         <span class="cm"># change alice's password (as root)</span>
+<span class="cn">passwd</span> <span class="fl">-l</span> <span class="st">alice</span>                      <span class="cm"># lock alice's password</span>
+<span class="cn">passwd</span> <span class="fl">-u</span> <span class="st">alice</span>                      <span class="cm"># unlock alice's password</span>
+<span class="cn">passwd</span> <span class="fl">-d</span> <span class="st">alice</span>                      <span class="cm"># delete password (allows passwordless login — dangerous)</span>
+<span class="cn">passwd</span> <span class="fl">-e</span> <span class="st">alice</span>                      <span class="cm"># expire password (force change on next login)</span>
+<span class="cn">passwd</span> <span class="fl">-S</span> <span class="st">alice</span>                      <span class="cm"># show password status</span>
+
+<span class="cm"># chage — password aging policy</span>
+<span class="cn">chage</span> <span class="fl">-l</span> <span class="st">alice</span>                       <span class="cm"># list password aging info</span>
+<span class="cn">chage</span> <span class="fl">-M 90</span> <span class="st">alice</span>                    <span class="cm"># max 90 days before forced change</span>
+<span class="cn">chage</span> <span class="fl">-m 7</span> <span class="st">alice</span>                     <span class="cm"># min 7 days between changes</span>
+<span class="cn">chage</span> <span class="fl">-W 14</span> <span class="st">alice</span>                    <span class="cm"># warn 14 days before expiry</span>
+<span class="cn">chage</span> <span class="fl">-E 2025-12-31</span> <span class="st">alice</span>           <span class="cm"># account expires on date</span>
+<span class="cn">chage</span> <span class="fl">-d 0</span> <span class="st">alice</span>                     <span class="cm"># force password change on next login</span></code></pre>
+
+  <h3>Group management</h3>
+  <pre><code><span class="cn">groupadd</span> <span class="st">developers</span>                  <span class="cm"># create a new group</span>
+<span class="cn">groupadd</span> <span class="fl">-g 2000</span> <span class="st">developers</span>          <span class="cm"># create with specific GID</span>
+<span class="cn">groupmod</span> <span class="fl">-n newname</span> <span class="st">developers</span>       <span class="cm"># rename group</span>
+<span class="cn">groupdel</span> <span class="st">developers</span>                  <span class="cm"># delete group (fails if it's anyone's primary group)</span>
+<span class="cn">gpasswd</span> <span class="fl">-a</span> <span class="st">alice developers</span>          <span class="cm"># add alice to developers</span>
+<span class="cn">gpasswd</span> <span class="fl">-d</span> <span class="st">alice developers</span>          <span class="cm"># remove alice from developers</span>
+<span class="cn">gpasswd</span> <span class="fl">-M</span> <span class="st">alice,bob,carol developers</span> <span class="cm"># set ALL members of group at once</span>
+
+<span class="cm"># View group memberships</span>
+<span class="cn">groups</span> <span class="st">alice</span>                         <span class="cm"># list groups alice belongs to</span>
+<span class="cn">id</span> <span class="st">alice</span>                             <span class="cm"># detailed: uid, gid, all groups</span>
+<span class="cn">getent</span> <span class="st">group developers</span>             <span class="cm"># show group entry from /etc/group</span>
+<span class="cn">getent</span> <span class="st">passwd alice</span>                  <span class="cm"># show user entry from /etc/passwd</span></code></pre>
+
+  <h3>Querying users and sessions</h3>
+  <pre><code><span class="cn">whoami</span>                               <span class="cm"># print current effective username</span>
+<span class="cn">id</span>                                   <span class="cm"># print uid, gid, all groups</span>
+<span class="cn">who</span>                                  <span class="cm"># who is logged in right now</span>
+<span class="cn">w</span>                                    <span class="cm"># who + what they're doing + idle time</span>
+<span class="cn">last</span>                                 <span class="cm"># login history (reads /var/log/wtmp)</span>
+<span class="cn">last</span> <span class="st">alice</span>                           <span class="cm"># login history for alice only</span>
+<span class="cn">lastb</span>                                <span class="cm"># failed login attempts (reads /var/log/btmp)</span>
+<span class="cn">lastlog</span>                              <span class="cm"># last login for every account</span>
+<span class="cn">finger</span> <span class="st">alice</span>                         <span class="cm"># user info (if installed)</span>
+
+<span class="cm"># newgrp — temporarily change active primary group</span>
+<span class="cn">newgrp</span> <span class="st">docker</span>                        <span class="cm"># new shell with docker as primary group</span>
+<span class="cm"># New files created in this shell will have group "docker"</span>
+<span class="cm"># NOTE: group changes via usermod -aG require logout/login to take effect</span>
+<span class="cm"># OR: newgrp groupname to activate without logout</span></code></pre>
+
+  <h3>Configuring sudoers</h3>
+  <pre><code><span class="cn">visudo</span>                               <span class="cm"># ALWAYS use visudo — validates syntax before saving</span>
+<span class="cm"># Never edit /etc/sudoers directly with vim/nano</span>
+<span class="cm"># A syntax error in sudoers = NO ONE can use sudo = locked out</span>
+
+<span class="cm"># /etc/sudoers syntax:</span>
+<span class="cm"># user  host=(run_as)  command</span>
+
+<span class="kw">root</span>    ALL=(ALL:ALL) ALL        <span class="cm"># root can do everything</span>
+<span class="kw">alice</span>   ALL=(ALL:ALL) ALL        <span class="cm"># alice can do everything (admin)</span>
+<span class="kw">%sudo</span>   ALL=(ALL:ALL) ALL        <span class="cm"># anyone in 'sudo' group</span>
+<span class="kw">%wheel</span>  ALL=(ALL:ALL) ALL        <span class="cm"># anyone in 'wheel' group (RHEL/CentOS)</span>
+
+<span class="cm"># Restrict to specific commands:</span>
+<span class="kw">bob</span>     ALL=(ALL) /usr/bin/systemctl restart nginx
+<span class="kw">deploy</span>  ALL=(ALL) NOPASSWD: /usr/bin/rsync, /usr/bin/systemctl
+
+<span class="cm"># NOPASSWD — skip password prompt (common for automation)</span>
+<span class="kw">ubuntu</span>  ALL=(ALL) NOPASSWD: ALL   <span class="cm"># cloud default — convenient, less secure</span>
+
+<span class="cm"># Drop-in files (preferred over editing sudoers directly)</span>
+<span class="cm"># Create /etc/sudoers.d/myapp  (mode 440, owned by root)</span></code></pre>
+</div>
+
+<!-- S4 -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon">📁</div>
+    <div><div class="section-title">Important Files & Configs</div><div class="section-num">Section 04 — The four key files that define identity on Linux</div></div>
+  </div>
+
+  <div class="note note-files">
+    <div class="note-label">📁 The Four Identity Files</div>
+    <p>These four files together define every user and group on the system. Understanding their format lets you read, debug, and modify the user database manually when GUI tools aren't available.</p>
+  </div>
+
+  <h3>/etc/passwd — User database (readable by all)</h3>
+  <div class="file-anatomy">
+<span class="fa-comment"># Field:    username   pw  UID    GID   GECOS         home          shell</span>
+<span class="fa-field">ubuntu</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">1000</span><span class="fa-sep">:</span><span class="fa-field">1000</span><span class="fa-sep">:</span><span class="fa-val">Ubuntu User</span><span class="fa-sep">:</span><span class="fa-field">/home/ubuntu</span><span class="fa-sep">:</span><span class="fa-val">/bin/bash</span>
+<span class="fa-field">www-data</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">33</span><span class="fa-sep">:</span><span class="fa-field">33</span><span class="fa-sep">:</span><span class="fa-val">www-data</span><span class="fa-sep">:</span><span class="fa-field">/var/www</span><span class="fa-sep">:</span><span class="fa-val">/usr/sbin/nologin</span>
+<span class="fa-field">nobody</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">65534</span><span class="fa-sep">:</span><span class="fa-field">65534</span><span class="fa-sep">:</span><span class="fa-val">nobody</span><span class="fa-sep">:</span><span class="fa-field">/nonexistent</span><span class="fa-sep">:</span><span class="fa-val">/usr/sbin/nologin</span>
+  </div>
+  <ul>
+    <li><strong>username</strong> — login name (1–32 chars, alphanumeric + underscore)</li>
+    <li><strong>x</strong> — password placeholder (actual hash is in /etc/shadow)</li>
+    <li><strong>UID</strong> — numeric user ID</li>
+    <li><strong>GID</strong> — primary group ID</li>
+    <li><strong>GECOS</strong> — full name / comment field</li>
+    <li><strong>home</strong> — home directory path</li>
+    <li><strong>shell</strong> — login shell (<code>/usr/sbin/nologin</code> = cannot log in)</li>
+  </ul>
+
+  <h3>/etc/shadow — Password hashes (root only: 640)</h3>
+  <div class="file-anatomy">
+<span class="fa-comment"># user  :hash            :lastchg:min:max:warn:inactive:expire</span>
+<span class="fa-field">ubuntu</span><span class="fa-sep">:</span><span class="fa-val">$6$rounds=5000$salt$longhash...</span><span class="fa-sep">:</span><span class="fa-field">19738</span><span class="fa-sep">:</span><span class="fa-field">0</span><span class="fa-sep">:</span><span class="fa-field">99999</span><span class="fa-sep">:</span><span class="fa-field">7</span><span class="fa-sep">:::</span>
+<span class="fa-field">alice</span><span class="fa-sep">:</span><span class="fa-val">!</span><span class="fa-sep">:</span><span class="fa-field">19738</span><span class="fa-sep">:::::::            </span><span class="fa-comment"># ! = locked account</span>
+<span class="fa-field">myapp</span><span class="fa-sep">:</span><span class="fa-val">*</span><span class="fa-sep">:</span><span class="fa-field">19738</span><span class="fa-sep">:::::::            </span><span class="fa-comment"># * = no password (system account)</span>
+  </div>
+  <p>The hash format: <code>$algorithm$salt$hash</code> — e.g., <code>$6$</code> = SHA-512, <code>$y$</code> = yescrypt (modern Ubuntu default).</p>
+
+  <h3>/etc/group — Group database</h3>
+  <div class="file-anatomy">
+<span class="fa-comment"># groupname : pw : GID  : members (comma-separated)</span>
+<span class="fa-field">sudo</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">27</span><span class="fa-sep">:</span><span class="fa-val">ubuntu,alice</span>
+<span class="fa-field">docker</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">998</span><span class="fa-sep">:</span><span class="fa-val">ubuntu</span>
+<span class="fa-field">developers</span><span class="fa-sep">:</span><span class="fa-val">x</span><span class="fa-sep">:</span><span class="fa-field">2000</span><span class="fa-sep">:</span><span class="fa-val">alice,bob,carol</span>
+  </div>
+
+  <h3>/etc/sudoers and /etc/sudoers.d/</h3>
+  <p><code>/etc/sudoers</code> is the main sudo policy file. Never edit it directly — use <code>visudo</code>. The <code>/etc/sudoers.d/</code> directory holds drop-in policy files, one per application or team. Files there must have mode <code>440</code> and be owned by root.</p>
+
+  <h3>Other key files</h3>
+  <table>
+    <tr><th>File</th><th>Purpose</th><th>Access</th></tr>
+    <tr><td><code>/etc/login.defs</code></td><td>Default UID/GID ranges, password aging defaults, umask</td><td>root</td></tr>
+    <tr><td><code>/etc/adduser.conf</code></td><td>adduser defaults (home dir skeleton, shell)</td><td>root</td></tr>
+    <tr><td><code>/etc/skel/</code></td><td>Skeleton files copied to new user's home on creation</td><td>root</td></tr>
+    <tr><td><code>/var/log/auth.log</code></td><td>All authentication events: logins, sudo, ssh</td><td>adm group</td></tr>
+    <tr><td><code>/var/log/secure</code></td><td>Same but on RHEL/CentOS systems</td><td>root</td></tr>
+    <tr><td><code>/etc/nsswitch.conf</code></td><td>Name service switch — where to look up users (files, ldap, sssd)</td><td>all</td></tr>
+  </table>
+</div>
+
+<!-- S5 -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon">🔬</div>
+    <div><div class="section-title">Under the Hood</div><div class="section-num">Section 05 — How the kernel uses UIDs internally</div></div>
+  </div>
+
+  <div class="note note-hood">
+    <div class="note-label">🔬 Under the Hood</div>
+    <p>The kernel never uses usernames. It stores UIDs and GIDs everywhere: in inodes, in process tables, in socket connections. The username-to-UID mapping is purely a userspace convention resolved by the C library via NSS (Name Service Switch).</p>
+  </div>
+
+  <h3>Real UID vs Effective UID</h3>
+  <p>Every process has three UIDs that you must understand for security work:</p>
+  <table>
+    <tr><th>UID Type</th><th>Name</th><th>Meaning</th></tr>
+    <tr><td><strong>RUID</strong></td><td>Real UID</td><td>Who actually launched this process (your login UID)</td></tr>
+    <tr><td><strong>EUID</strong></td><td>Effective UID</td><td>What the kernel checks for permission decisions</td></tr>
+    <tr><td><strong>SUID</strong></td><td>Saved UID</td><td>Allows switching back to RUID after privilege drop</td></tr>
+  </table>
+  <pre><code><span class="cm"># Normal process (you running 'ls'):</span>
+<span class="cm"># RUID=1000 (ubuntu)  EUID=1000 (ubuntu)  → no privilege</span>
+
+<span class="cm"># sudo process:</span>
+<span class="cm"># RUID=1000 (ubuntu)  EUID=0 (root)  → kernel sees root for permissions</span>
+
+<span class="cm"># SUID binary like /usr/bin/passwd:</span>
+<span class="cm"># RUID=1000 (you)  EUID=0 (root, because file is owned by root + SUID set)</span>
+<span class="cm"># passwd can write to /etc/shadow (which only root can write)</span>
+<span class="cm"># It drops back to RUID after finishing</span></code></pre>
+
+  <h3>PAM — Pluggable Authentication Modules</h3>
+  <p>When you log in or use sudo, authentication goes through <strong>PAM</strong> — a stack of pluggable modules. PAM decides: is this password correct? Is the account locked? Is it within login hours? Has the password expired? This is configured in <code>/etc/pam.d/</code>.</p>
+
+  <pre><code><span class="cm"># PAM stack for sudo (/etc/pam.d/sudo):</span>
+<span class="cm"># auth   required  pam_env.so          → load environment variables</span>
+<span class="cm"># auth   required  pam_unix.so         → check unix password</span>
+<span class="cm"># auth   optional  pam_faillock.so     → count failed attempts</span>
+
+<span class="cm"># View failed login lockout status:</span>
+<span class="cn">faillock</span> <span class="fl">--user</span> <span class="st">alice</span>
+<span class="cm"># Reset lockout:</span>
+<span class="cn">faillock</span> <span class="fl">--user</span> <span class="st">alice</span> <span class="fl">--reset</span></code></pre>
+
+  <h3>nsswitch.conf and getent</h3>
+  <pre><code><span class="cm"># /etc/nsswitch.conf controls where user lookups go:</span>
+<span class="cm"># passwd:   files systemd                 ← look in /etc/passwd first, then systemd</span>
+<span class="cm"># group:    files systemd</span>
+<span class="cm"># In enterprise: files ldap   or   files sss (SSSD for Active Directory)</span>
+
+<span class="cm"># getent — query NSS databases (works for local AND LDAP/AD users)</span>
+<span class="cn">getent</span> <span class="st">passwd alice</span>            <span class="cm"># resolve user from any NSS source</span>
+<span class="cn">getent</span> <span class="st">group developers</span>        <span class="cm"># resolve group</span>
+<span class="cn">getent</span> <span class="st">passwd</span>                  <span class="cm"># list ALL users (including LDAP if configured)</span>
+<span class="cm"># Use getent instead of cat /etc/passwd in enterprise environments</span></code></pre>
+</div>
+
+<!-- S6 -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon">🏭</div>
+    <div><div class="section-title">Real-World Usage</div><div class="section-num">Section 06 — How teams and applications are set up in production</div></div>
+  </div>
+
+  <div class="note note-real">
+    <div class="note-label">🏭 Real-World Patterns</div>
+    <p>These are the exact patterns used when provisioning production servers and deploying applications.</p>
+  </div>
+
+  <h3>Creating a service account for an application</h3>
+  <pre><code><span class="cm"># Principle: every application runs as its own dedicated low-privilege user</span>
+<span class="cm"># Never run apps as root. Never share user accounts between apps.</span>
+
+<span class="cm"># Create a service account for an app called 'myapp'</span>
+<span class="cn">useradd</span> <span class="fl">-r</span> <span class="fl">-M</span> <span class="fl">-s /sbin/nologin</span> <span class="fl">-d /opt/myapp</span> <span class="fl">-c "My App Service"</span> <span class="st">myapp</span>
+<span class="cm"># -r: system account (UID < 1000)</span>
+<span class="cm"># -M: no home directory</span>
+<span class="cm"># -s /sbin/nologin: cannot log in interactively</span>
+<span class="cm"># -d /opt/myapp: home set to app dir for reference</span>
+
+<span class="cm"># Set ownership of app files:</span>
+<span class="cn">chown</span> <span class="fl">-R</span> <span class="st">myapp:myapp /opt/myapp</span>
+<span class="cn">chmod</span> <span class="fl">-R</span> <span class="st">750 /opt/myapp</span>
+
+<span class="cm"># Verify: can this account log in? (should fail)</span>
+<span class="cn">su</span> <span class="fl">-s /bin/bash</span> <span class="st">myapp</span> <span class="fl">-c "whoami"</span></code></pre>
+
+  <h3>Setting up a dev team with shared access</h3>
+  <pre><code><span class="cm"># Create a team group</span>
+<span class="cn">groupadd</span> <span class="fl">-g 2000</span> <span class="st">devteam</span>
+
+<span class="cm"># Add developers to the group</span>
+<span class="cn">usermod</span> <span class="fl">-aG</span> <span class="st">devteam alice</span>
+<span class="cn">usermod</span> <span class="fl">-aG</span> <span class="st">devteam bob</span>
+<span class="cn">usermod</span> <span class="fl">-aG</span> <span class="st">devteam carol</span>
+
+<span class="cm"># Create shared project directory</span>
+<span class="cn">mkdir</span> <span class="st">/opt/project</span>
+<span class="cn">chown</span> <span class="st">root:devteam /opt/project</span>
+<span class="cn">chmod</span> <span class="st">2775 /opt/project</span>          <span class="cm"># setgid: new files inherit devteam group</span>
+
+<span class="cm"># Give devteam specific sudo privileges (deploy only):</span>
+<span class="cm"># /etc/sudoers.d/devteam</span>
+<span class="kw">%devteam</span> ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart myapp, /usr/bin/journalctl</code></pre>
+
+  <h3>Onboarding a new engineer (full checklist)</h3>
+  <pre><code><span class="cn">adduser</span> <span class="st">newengineer</span>               <span class="cm"># create with home dir, interactive</span>
+<span class="cn">usermod</span> <span class="fl">-aG</span> <span class="st">sudo newengineer</span>      <span class="cm"># grant sudo</span>
+<span class="cn">usermod</span> <span class="fl">-aG</span> <span class="st">docker,devteam newengineer</span>
+<span class="cn">chage</span> <span class="fl">-d 0</span> <span class="st">newengineer</span>            <span class="cm"># force password change on first login</span>
+<span class="cn">chage</span> <span class="fl">-M 90 -W 14</span> <span class="st">newengineer</span>   <span class="cm"># 90-day password policy with 14-day warning</span>
+<span class="cm"># Add SSH public key:</span>
+<span class="cn">mkdir</span> <span class="fl">-p</span> <span class="st">/home/newengineer/.ssh</span>
+<span class="cn">chmod</span> <span class="st">700 /home/newengineer/.ssh</span>
+echo <span class="st">"ssh-ed25519 AAAA..."</span> >> <span class="st">/home/newengineer/.ssh/authorized_keys</span>
+<span class="cn">chmod</span> <span class="st">600 /home/newengineer/.ssh/authorized_keys</span>
+<span class="cn">chown</span> <span class="fl">-R</span> <span class="st">newengineer:newengineer /home/newengineer/.ssh</span></code></pre>
+</div>
+
+<!-- S7 -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon">🔄</div>
+    <div><div class="section-title">Modern vs Legacy Tools</div><div class="section-num">Section 07</div></div>
+  </div>
+
+  <table>
+    <tr><th>Task</th><th>Legacy / Low-level</th><th>Modern / High-level</th><th>Prefer</th></tr>
+    <tr><td>Create user</td><td><code>useradd</code></td><td><code>adduser</code> (Debian)</td><td><code>adduser</code> for humans, <code>useradd</code> for scripts</td></tr>
+    <tr><td>Edit sudoers</td><td>Edit file directly</td><td><code>visudo</code></td><td>Always <code>visudo</code> — never edit directly</td></tr>
+    <tr><td>Manage groups</td><td><code>groupadd/mod/del</code></td><td><code>gpasswd</code></td><td>Both used regularly</td></tr>
+    <tr><td>Auth backends</td><td><code>/etc/passwd</code> only</td><td>SSSD, LDAP, Active Directory</td><td>Enterprise: SSSD. Simple: local files.</td></tr>
+    <tr><td>List users</td><td><code>cat /etc/passwd</code></td><td><code>getent passwd</code></td><td><code>getent</code> works with LDAP too</td></tr>
+    <tr><td>Password policy</td><td><code>chage</code> + login.defs</td><td>PAM + pam_pwquality</td><td>PAM for enforcement, chage for per-user</td></tr>
+    <tr><td>User info</td><td><code>finger</code></td><td><code>id</code>, <code>getent passwd</code></td><td><code>finger</code> rarely installed; use <code>id</code></td></tr>
+  </table>
+</div>
+
+<!-- S8 -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon">⚠️</div>
+    <div><div class="section-title">Common Beginner Mistakes</div><div class="section-num">Section 08</div></div>
+  </div>
+  <ul>
+    <li><strong><code>usermod -G</code> without <code>-a</code>:</strong> Replaces all supplementary groups. Use <code>usermod -aG</code> always. This is the most common user-management mistake and it causes lockouts.</li>
+    <li><strong>Group membership changes need re-login:</strong> Adding a user to a group takes effect in new sessions only. Existing terminal sessions still use the old groups. Use <code>newgrp groupname</code> or log out and back in.</li>
+    <li><strong>Confusing <code>su -</code> and <code>su</code>:</strong> <code>su alice</code> switches user but keeps your current environment. <code>su - alice</code> gives a full login shell with alice's environment. Almost always use <code>su -</code>.</li>
+    <li><strong>Editing /etc/sudoers directly:</strong> Always use <code>visudo</code>. It validates the file before saving. A syntax error in sudoers means nobody can sudo — emergency recovery from console needed.</li>
+    <li><strong>Creating users with the same UID:</strong> If two entries in /etc/passwd share a UID, the kernel treats them as the same user. Files owned by one are accessible to the other. UIDs must be unique.</li>
+    <li><strong>Not setting a shell for service accounts:</strong> Forgetting <code>-s /sbin/nologin</code> when creating a service account means it can potentially log in if someone sets a password.</li>
+  </ul>
+</div>
+
+<!-- S9 -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon">🏗️</div>
+    <div><div class="section-title">Common Production Mistakes</div><div class="section-num">Section 09</div></div>
+  </div>
+  <ul>
+    <li><strong>Running applications as root:</strong> If the app is compromised, the attacker has root. Every application should run as a dedicated user with only the access it needs — nothing more.</li>
+    <li><strong>NOPASSWD: ALL in sudoers for all users:</strong> Common on cloud images for convenience (e.g., default Ubuntu AWS AMI). Acceptable if SSH key auth is enforced; dangerous if password auth is also allowed.</li>
+    <li><strong>Not auditing who's in the sudo group:</strong> <code>getent group sudo</code>. If a contractor account or old employee account is still in sudo, that's an open door.</li>
+    <li><strong>Shared service accounts between applications:</strong> If www-data runs both nginx and your PHP app, a PHP exploit can read nginx configs. Separate users per app.</li>
+    <li><strong>Forgetting to delete user home directory on offboarding:</strong> <code>userdel alice</code> removes the account but leaves <code>/home/alice</code> with all its SSH keys and scripts. Use <code>userdel -r</code> or manually clean up.</li>
+    <li><strong>Password expiry breaking service accounts:</strong> Applying a password policy (<code>chage -M 90</code>) to service accounts causes them to "expire" — their processes then fail to authenticate. Service accounts should have <code>chage -M -1</code> (no expiry).</li>
+  </ul>
+</div>
+
+<!-- S10 -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-icon">🛠</div>
+    <div><div class="section-title">Debugging Workflow</div><div class="section-num">Section 10 — Diagnosing user and permission problems</div></div>
+  </div>
+
+  <div class="note note-debug">
+    <div class="note-label">🛠 Debugging Checklist</div>
+    <p>When you see "permission denied" or "not in sudoers", work through this order.</p>
+  </div>
+
+  <pre><code><span class="cm"># "sudo: user is not in the sudoers file"</span>
+<span class="cn">getent</span> <span class="st">group sudo</span>              <span class="cm"># is the user in the sudo group?</span>
+<span class="cn">sudo</span> <span class="fl">-l -U</span> <span class="st">alice</span>               <span class="cm"># what can alice sudo? (run as root)</span>
+<span class="cn">cat</span> <span class="st">/etc/sudoers.d/*</span>          <span class="cm"># check drop-in rules</span>
+<span class="cm"># Fix: usermod -aG sudo alice  (then they must log out/in)</span>
+
+<span class="cm"># "Permission denied" on a file owned by root</span>
+<span class="cn">id</span>                             <span class="cm"># what user/groups am I?</span>
+<span class="cn">ls</span> <span class="fl">-la</span> <span class="st">thefile</span>                 <span class="cm"># who owns it, what permissions?</span>
+<span class="cn">groups</span>                         <span class="cm"># am I in the right group?</span>
+<span class="cm"># If I should have access via group, check if I logged in after being added</span>
+
+<span class="cm"># "This account is currently not available" (nologin shell)</span>
+<span class="cn">getent</span> <span class="st">passwd username</span>         <span class="cm"># check the shell field (last field)</span>
+<span class="cm"># If /usr/sbin/nologin — this is by design for service accounts</span>
+<span class="cm"># To run a command AS this user: sudo -u myapp /opt/myapp/test.sh</span>
+<span class="cm"># To debug: sudo -u myapp -s /bin/bash  (override shell just for this session)</span>
+
+<span class="cm"># Account locked</span>
+<span class="cn">passwd</span> <span class="fl">-S</span> <span class="st">alice</span>                <span class="cm"># LK = locked, PS = has password, NP = no password</span>
+<span class="cn">chage</span> <span class="fl">-l</span> <span class="st">alice</span>                 <span class="cm"># check if password/account expired</span>
+<span class="cn">grep</span> <span class="st">alice /etc/shadow</span>        <span class="cm"># ! prefix on hash = locked</span>
+<span class="cm"># Fix: passwd -u alice  or  usermod -U alice</span>
+
+<span class="cm"># Check recent auth events</span>
+<span class="cn">tail</span> <span class="fl">-50</span> <span class="st">/var/log/auth.log</span>    <span class="cm"># Ubuntu: all authentication events</span>
+<span class="cn">grep</span> <span class="st">"alice"</span> <span class="st">/var/log/auth.log</span> | <span class="cn">tail</span> <span class="fl">-20</span>
+<span class="cn">journalctl</span> <span class="fl">_COMM=sudo</span>          <span class="cm"># all sudo invocations (systemd systems)</span></code></pre>
+</div>
+
+<!-- S11 -->
+<div class="section" id="s11">
+  <div class="section-header">
+    <div class="section-icon">🔐</div>
+    <div><div class="section-title">Security Considerations</div><div class="section-num">Section 11 — The most security-critical Linux topic</div></div>
+  </div>
+
+  <div class="note note-sec">
+    <div class="note-label">🔐 This is the most security-critical topic in Phase 1</div>
+    <p>More real-world breaches involve misconfigured user accounts, excessive sudo privileges, or service accounts running as root than almost any other Linux misconfiguration. Get this right.</p>
+  </div>
+
+  <ul>
+    <li><strong>Principle of Least Privilege:</strong> Every user and service account should have only the minimum permissions required to do its job. Nothing more.</li>
+    <li><strong>Audit sudoers regularly:</strong> <code>grep -r NOPASSWD /etc/sudoers /etc/sudoers.d/</code> — every NOPASSWD entry is a risk. Justify each one.</li>
+    <li><strong>Audit sudo group membership:</strong> <code>getent group sudo wheel</code>. Remove accounts that no longer need elevated access.</li>
+    <li><strong>Disable root SSH login:</strong> In <code>/etc/ssh/sshd_config</code>: <code>PermitRootLogin no</code>. Users log in as themselves, then sudo.</li>
+    <li><strong>Lock unused accounts:</strong> Former employees, testing accounts, default vendor accounts. <code>usermod -L username</code> or <code>chage -E 1 username</code>.</li>
+    <li><strong>Watch for UID 0 accounts:</strong> <code>awk -F: '($3 == 0) {print}' /etc/passwd</code> — there should only ever be one: root. Any other UID 0 account is a backdoor.</li>
+    <li><strong>Use SSH keys, not passwords:</strong> Disable password authentication in sshd_config for all interactive logins. SSH keys are far harder to brute-force than passwords.</li>
+  </ul>
+
+  <pre><code><span class="cm"># Security audit commands — run these on any new server</span>
+<span class="cn">awk</span> <span class="fl">-F:</span> <span class="st">'($3 == 0) {print}'</span> <span class="st">/etc/passwd</span>     <span class="cm"># UID 0 accounts (should be root only)</span>
+<span class="cn">awk</span> <span class="fl">-F:</span> <span class="st">'($2 == "" ) {print}'</span> <span class="st">/etc/shadow</span>    <span class="cm"># accounts with no password (NP)</span>
+<span class="cn">grep</span> <span class="fl">-r</span> <span class="st">"NOPASSWD"</span> <span class="st">/etc/sudoers /etc/sudoers.d/</span>
+<span class="cn">getent</span> <span class="st">group sudo wheel</span>                         <span class="cm"># who has sudo?</span>
+<span class="cn">lastb</span> | <span class="cn">head</span> <span class="fl">-20</span>                                <span class="cm"># recent failed login attempts</span>
+<span class="cn">last</span> | <span class="cn">grep</span> <span class="st">"still logged in"</span>                  <span class="cm"># who's currently in?</span></code></pre>
+</div>
+
+<!-- S12 -->
+<div class="section" id="s12">
+  <div class="section-header">
+    <div class="section-icon">🚀</div>
+    <div><div class="section-title">Performance Considerations</div><div class="section-num">Section 12</div></div>
+  </div>
+  <ul>
+    <li><strong>NSS lookup latency:</strong> On systems using LDAP or Active Directory via SSSD, user lookups (<code>id</code>, file ownership resolution) make network calls. A misconfigured or unreachable LDAP server causes hangs on every <code>ls -la</code>. Local caching via SSSD mitigates this.</li>
+    <li><strong>Large groups slow group membership checks:</strong> A group with thousands of members (<code>/etc/group</code> line very long) can slow down permission checks. Use LDAP nested groups for large organisations instead of flat local groups.</li>
+    <li><strong>PAM modules add login latency:</strong> Complex PAM stacks (LDAP + OTP + audit logging) can add 1–3 seconds to every SSH login. Profile with <code>time ssh user@host exit</code>.</li>
+    <li><strong>sudo credential caching:</strong> The default 15-minute sudo timestamp cache means users don't re-authenticate frequently. Reduce with <code>Defaults timestamp_timeout=5</code> for higher security environments.</li>
+  </ul>
+</div>
+
+<!-- S13 -->
+<div class="section" id="s13">
+  <div class="section-header">
+    <div class="section-icon">💡</div>
+    <div><div class="section-title">Best Practices — Senior Level</div><div class="section-num">Section 13</div></div>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about users and groups</h4>
+    <ul>
+      <li>They create a service account for every application. The account has no login shell, no home directory, and owns only what the app needs. This is non-negotiable.</li>
+      <li>They use <code>visudo</code> exclusively and always test sudoers changes by opening a second terminal before closing the first.</li>
+      <li>They never grant <code>NOPASSWD: ALL</code> unless there is a documented, justified reason. Automation gets <code>NOPASSWD</code> for specific commands only.</li>
+      <li>They run <code>sudo -l</code> as a habit when landing on an unfamiliar server — know your privileges immediately.</li>
+      <li>They script user provisioning (Ansible, Terraform) rather than doing it manually — consistent, auditable, repeatable.</li>
+      <li>They know that group membership changes require re-login, and they communicate this clearly to engineers who report "it still doesn't work" after being added to docker.</li>
+      <li>They check <code>/var/log/auth.log</code> as part of any incident investigation — auth logs tell you exactly who did what and when.</li>
+    </ul>
+  </div>
+
+  <pre><code><span class="cm"># Sudoers drop-in best practice</span>
+<span class="cm"># File: /etc/sudoers.d/deploy</span>
+<span class="cm"># Mode: 440  Owner: root:root</span>
+
+<span class="cm"># Deployment user: restart specific services only</span>
+<span class="kw">deploy</span> ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart myapp, \
+                            /usr/bin/systemctl status myapp, \
+                            /usr/bin/journalctl -u myapp
+
+<span class="cm"># Create it safely:</span>
+<span class="cn">echo</span> <span class="st">'deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart myapp'</span> > /tmp/deploy_sudo
+<span class="cn">visudo</span> <span class="fl">-c -f</span> <span class="st">/tmp/deploy_sudo</span>    <span class="cm"># validate syntax before installing</span>
+<span class="cn">cp</span> <span class="st">/tmp/deploy_sudo /etc/sudoers.d/deploy</span>
+<span class="cn">chmod</span> <span class="st">440 /etc/sudoers.d/deploy</span></code></pre>
+</div>
+
+<!-- S14 -->
+<div class="section" id="s14">
+  <div class="section-header">
+    <div class="section-icon">🔥</div>
+    <div><div class="section-title">Real Incident Scenarios</div><div class="section-num">Section 14</div></div>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>The sudo Lockout</h4>
+    <p><strong>Scenario:</strong> An engineer edits <code>/etc/sudoers</code> directly with vim, saves a file with a typo. All subsequent <code>sudo</code> commands fail with "syntax error". Nobody can sudo.</p>
+    <p><strong>Symptoms:</strong> <code>sudo: /etc/sudoers is owned by uid 0, not uid 0</code> or <code>sudo: parse error in /etc/sudoers</code></p>
+    <p><strong>Recovery (requires root console access):</strong></p>
+    <pre style="margin:8px 0"><code><span class="cm"># Option 1: If you have another terminal still open with sudo cached:</span>
+<span class="cn">sudo</span> <span class="st">visudo</span>                    <span class="cm"># fix the error while cache is valid</span>
+
+<span class="cm"># Option 2: Boot to recovery mode (single user / emergency.target)</span>
+<span class="cm"># At the root prompt:</span>
+<span class="cn">visudo</span>                         <span class="cm"># fix the file</span>
+
+<span class="cm"># Option 3: Cloud provider console/serial access as root</span>
+<span class="cn">pkexec</span> <span class="st">visudo</span>                  <span class="cm"># pkexec uses PolicyKit, not sudoers</span></code></pre>
+    <p><strong>Prevention:</strong> Always use <code>visudo</code>. Always keep a second terminal open when modifying sudoers. Never edit sudoers on a server you can only reach via SSH.</p>
+  </div>
+
+  <div class="incident">
+    <div class="incident-label">🚨 Production Incident — Simulation</div>
+    <h4>The Group Change That Broke Docker</h4>
+    <p><strong>Scenario:</strong> New developer added to docker group. They run <code>docker ps</code> and get "permission denied on /var/run/docker.sock". They report it's broken. You re-check and confirm they are in the group.</p>
+    <p><strong>Root cause:</strong> <code>usermod -aG docker alice</code> takes effect only in <strong>new login sessions</strong>. Alice's existing terminal session still has the old group list.</p>
+    <p><strong>Fix:</strong></p>
+    <pre style="margin:8px 0"><code><span class="cm"># Alice runs in her existing terminal:</span>
+<span class="cn">newgrp</span> <span class="st">docker</span>       <span class="cm"># activates group for current shell</span>
+<span class="cm"># Or: log out and log back in</span>
+<span class="cm"># Verify:</span>
+<span class="cn">id</span>                  <span class="cm"># docker should now appear in groups list</span></code></pre>
+  </div>
+</div>
+
+<!-- S15 -->
+<div class="section" id="s15">
+  <div class="section-header">
+    <div class="section-icon">🧪</div>
+    <div><div class="section-title">Hands-On Labs</div><div class="section-num">Section 15</div></div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge beginner">BEGINNER</span><span class="lab-title">Lab 1 — User Lifecycle: Create, Use, Delete</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Create a user: <code>sudo adduser testuser1</code>. Set a password when prompted.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Verify the entry: <code>getent passwd testuser1</code>. Read each of the 7 fields.</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Switch to the user: <code>sudo su - testuser1</code>. Run <code>id</code> and <code>pwd</code>. Return with <code>exit</code>.</span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Create a group: <code>sudo groupadd testgroup</code>. Add testuser1: <code>sudo usermod -aG testgroup testuser1</code>.</span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Verify group membership: <code>getent group testgroup</code> and <code>id testuser1</code>.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Lock the account: <code>sudo passwd -L testuser1</code>. Try logging in. Check status: <code>sudo passwd -S testuser1</code>.</span></div>
+      <div class="lab-step"><span class="step-num">7</span><span>Delete the user and home: <code>sudo userdel -r testuser1</code>. Verify it's gone with <code>getent passwd testuser1</code>.</span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge intermediate">INTERMEDIATE</span><span class="lab-title">Lab 2 — Service Accounts & sudo Configuration</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Create a service account: <code>sudo useradd -r -M -s /sbin/nologin -c "My App" myappuser</code></span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Verify it cannot log in: <code>sudo su - myappuser</code> (should refuse). Then run: <code>sudo -u myappuser whoami</code> (should work as sudo).</span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Create a test directory owned by myappuser: <code>sudo mkdir /opt/myapptest && sudo chown myappuser:myappuser /opt/myapptest</code></span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Create a sudoers drop-in: <code>sudo visudo -f /etc/sudoers.d/myapptest</code>. Add: <code>%sudo ALL=(myappuser) NOPASSWD: /bin/ls /opt/myapptest</code></span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Test it: <code>sudo -u myappuser ls /opt/myapptest</code>. Verify with <code>sudo -l</code>.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Read password aging: <code>sudo chage -l myappuser</code>. Set never-expire for service account: <code>sudo chage -M -1 myappuser</code>.</span></div>
+    </div>
+  </div>
+
+  <div class="lab-block">
+    <div class="lab-header"><span class="lab-badge advanced">ADVANCED</span><span class="lab-title">Lab 3 — Security Audit & Auth Log Analysis</span></div>
+    <div class="lab-body">
+      <div class="lab-step"><span class="step-num">1</span><span>Find all UID 0 accounts: <code>awk -F: '($3==0){print $1}' /etc/passwd</code>. There should be only root.</span></div>
+      <div class="lab-step"><span class="step-num">2</span><span>Find accounts with no password: <code>sudo awk -F: '($2 == "" || $2 == "!"){print $1}' /etc/shadow</code></span></div>
+      <div class="lab-step"><span class="step-num">3</span><span>Find all NOPASSWD sudo entries: <code>sudo grep -r "NOPASSWD" /etc/sudoers /etc/sudoers.d/</code></span></div>
+      <div class="lab-step"><span class="step-num">4</span><span>Simulate a failed sudo: try to sudo as a user without privileges. Then check the auth log: <code>sudo tail -20 /var/log/auth.log | grep sudo</code></span></div>
+      <div class="lab-step"><span class="step-num">5</span><span>Use <code>last</code> to see login history and <code>lastb</code> to see failed attempts. Identify any patterns.</span></div>
+      <div class="lab-step"><span class="step-num">6</span><span>Write a user audit report: for each user in /etc/passwd with UID >= 1000, show: username, groups, last login, password status.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- S16 -->
+<div class="section" id="s16">
+  <div class="section-header">
+    <div class="section-icon">💣</div>
+    <div><div class="section-title">Break It & Fix It</div><div class="section-num">Section 16</div></div>
+  </div>
+  <div class="note note-break">
+    <div class="note-label">🧪 Break It & Fix It</div>
+    <p>All exercises are safe and recoverable. Do them in order — each teaches a specific debugging skill.</p>
+  </div>
+  <ul>
+    <li><strong>Break 1 — Remove all groups (without -a):</strong> Create testuser2. Add them to a test group. Then run <code>sudo usermod -G anothergroup testuser2</code> (no <code>-a</code>). Check <code>id testuser2</code>. Observe groups lost. Fix: <code>usermod -aG original_group testuser2</code>.</li>
+    <li><strong>Break 2 — Lock yourself out of sudo temporarily (SAFE):</strong> Create a test sudoers file with a deliberate syntax error in <code>/tmp/test_sudoers</code>. Run <code>visudo -c -f /tmp/test_sudoers</code> to see the error. This shows you why visudo validation matters without actually breaking anything.</li>
+    <li><strong>Break 3 — Expired password:</strong> Create testuser3. Force expire their password: <code>sudo chage -d 0 testuser3</code>. Try to log in — they should be forced to change password. Fix: set a new password as that user.</li>
+    <li><strong>Break 4 — nologin shell:</strong> Create testuser4 with nologin shell: <code>sudo useradd -s /sbin/nologin testuser4</code>. Attempt <code>sudo su - testuser4</code>. Observe the "account not available" message. Fix: <code>sudo usermod -s /bin/bash testuser4</code>.</li>
+    <li><strong>Break 5 — Group membership not active:</strong> Add yourself to a new group (<code>sudo groupadd testgrp && sudo usermod -aG testgrp $USER</code>). Try to access a resource that requires testgrp. Fail. Fix using <code>newgrp testgrp</code>. Verify with <code>id</code>.</li>
+  </ul>
+</div>
+
+<!-- S17 -->
+<div class="section" id="s17">
+  <div class="section-header">
+    <div class="section-icon">🎯</div>
+    <div><div class="section-title">Mini Project</div><div class="section-num">Section 17</div></div>
+  </div>
+  <div class="capstone-box">
+    <h4 style="font-size:16px;font-weight:700;color:var(--acc3);margin-bottom:10px;">🎯 Mini Project: User Provisioning Script</h4>
+    <p>Write <code>provision_user.sh</code> that accepts a username as argument and fully provisions a new engineer account. It must:</p>
+    <ul>
+      <li>Check if the user already exists — exit with error if so</li>
+      <li>Create the user with home directory and bash shell</li>
+      <li>Add to groups: <code>sudo</code>, <code>docker</code> (if docker group exists)</li>
+      <li>Force password change on first login</li>
+      <li>Set password max age to 90 days with 14-day warning</li>
+      <li>Create <code>~/.ssh/authorized_keys</code> with correct permissions (read SSH key from a file passed as second arg)</li>
+      <li>Print a summary: username, UID, groups, home directory</li>
+      <li>Log the action to <code>/var/log/user_provisioning.log</code> with timestamp</li>
+    </ul>
+    <p>Bonus: add a corresponding <code>deprovision_user.sh</code> that locks the account, removes from sudo, archives the home dir, and logs the action.</p>
+  </div>
+</div>
+
+<!-- S18 -->
+<div class="section" id="s18">
+  <div class="section-header">
+    <div class="section-icon">🏆</div>
+    <div><div class="section-title">Capstone Connection</div><div class="section-num">Section 18</div></div>
+  </div>
+  <p>The Phase 1 capstone (<code>sysreport.sh</code>) uses users and groups knowledge directly:</p>
+  <ul>
+    <li><strong>Who is logged in:</strong> <code>w</code> or <code>who</code> — list currently logged-in users</li>
+    <li><strong>Running the script securely:</strong> The script itself should run as a non-root user with sudo for specific commands — not as root throughout</li>
+    <li><strong>File ownership of the log:</strong> <code>/var/log/sysreport.log</code> should be owned by root with <code>640</code> so only root and the adm group can read it</li>
+    <li><strong>Checking sudo group:</strong> The report could include who has sudo access as part of a security summary</li>
+  </ul>
+</div>
+
+<!-- S19 -->
+<div class="section" id="s19">
+  <div class="section-header">
+    <div class="section-icon">❓</div>
+    <div><div class="section-title">Interview Questions</div><div class="section-num">Section 19 — Junior to Senior</div></div>
+  </div>
+
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is a UID and why does Linux use numbers instead of usernames internally?</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What is the difference between <code>useradd</code> and <code>adduser</code>?</div><div class="iq-hint">Hint: low-level vs high-level, interactive vs scriptable</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">What does the <code>x</code> in the password field of <code>/etc/passwd</code> mean?</div></div>
+  <div class="iq-item"><div class="iq-level level-jr">Junior</div><div class="iq-q">How do you add a user to a group without removing them from other groups?</div><div class="iq-hint">Hint: -aG not -G</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">You add a user to the docker group but they still can't run docker. What's the likely cause and fix?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">What is the difference between Real UID and Effective UID? When do they differ?</div><div class="iq-hint">Hint: SUID binaries, sudo, privilege escalation</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">Why should you always use <code>visudo</code> instead of editing <code>/etc/sudoers</code> directly?</div></div>
+  <div class="iq-item"><div class="iq-level level-mid">Mid</div><div class="iq-q">How do you create a service account that cannot log in interactively but can run processes?</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">Your sudoers file is broken and no one can sudo. Root password is unknown. How do you recover?</div><div class="iq-hint">Hint: recovery mode, pkexec, cloud console, cached credentials</div></div>
+  <div class="iq-item"><div class="iq-level level-sr">Senior</div><div class="iq-q">Describe your approach to the principle of least privilege when deploying a new web application. What accounts do you create, what permissions do they get, and how do you structure sudo access?</div></div>
+
+  <hr class="divider">
+  <h3>Self-test questions</h3>
+  <ol>
+    <li>What UID does root always have, and why is that special?</li>
+    <li>What is the difference between <code>su -</code> and <code>su</code>?</li>
+    <li>Where are hashed passwords stored, and who can read that file?</li>
+    <li>What does <code>!</code> at the start of a hash in <code>/etc/shadow</code> mean?</li>
+    <li>How does <code>sudo -l</code> help you in day-to-day work?</li>
+    <li>What command shows the last time each user logged in?</li>
+    <li>How do you check what groups a user belongs to?</li>
+    <li>What is <code>/etc/skel</code> used for?</li>
+    <li>A service account's password expires and breaks the app. How do you prevent this?</li>
+    <li>What file would you check to see recent failed login attempts?</li>
+  </ol>
+</div>
+
+<!-- S20 -->
+<div class="section" id="s20">
+  <div class="section-header">
+    <div class="section-icon">📝</div>
+    <div><div class="section-title">Cheat Sheet & Revision Summary</div><div class="section-num">Section 20</div></div>
+  </div>
+
+  <div class="cheat-grid">
+    <div class="cheat-card">
+      <h4>Create Users</h4>
+      <div class="cheat-row"><span class="cheat-cmd">adduser name</span><span class="cheat-desc">interactive (Ubuntu)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">useradd -m -s /bin/bash</span><span class="cheat-desc">scripted creation</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">useradd -r -M -s /sbin/nologin</span><span class="cheat-desc">service account</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">passwd username</span><span class="cheat-desc">set password</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">userdel -r username</span><span class="cheat-desc">delete + home dir</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Modify Users</h4>
+      <div class="cheat-row"><span class="cheat-cmd">usermod -aG grp user</span><span class="cheat-desc">add to group (keep others)</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">usermod -L username</span><span class="cheat-desc">lock account</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">usermod -U username</span><span class="cheat-desc">unlock account</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">usermod -s /bin/zsh</span><span class="cheat-desc">change shell</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">chage -d 0 user</span><span class="cheat-desc">force pw change</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Groups</h4>
+      <div class="cheat-row"><span class="cheat-cmd">groupadd name</span><span class="cheat-desc">create group</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">gpasswd -a user grp</span><span class="cheat-desc">add to group</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">gpasswd -d user grp</span><span class="cheat-desc">remove from group</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">newgrp groupname</span><span class="cheat-desc">activate group now</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">getent group name</span><span class="cheat-desc">show group members</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Sudo</h4>
+      <div class="cheat-row"><span class="cheat-cmd">visudo</span><span class="cheat-desc">edit sudoers safely</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo -l</span><span class="cheat-desc">list my sudo rights</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo -u user cmd</span><span class="cheat-desc">run as specific user</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo -i</span><span class="cheat-desc">interactive root shell</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo -k</span><span class="cheat-desc">clear sudo cache</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Inspect</h4>
+      <div class="cheat-row"><span class="cheat-cmd">id [user]</span><span class="cheat-desc">uid, gid, all groups</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">getent passwd user</span><span class="cheat-desc">full user record</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">chage -l user</span><span class="cheat-desc">password aging info</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">last [user]</span><span class="cheat-desc">login history</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">w / who</span><span class="cheat-desc">currently logged in</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Security Audit</h4>
+      <div class="cheat-row"><span class="cheat-cmd">awk -F: '($3==0)' /etc/passwd</span><span class="cheat-desc">UID 0 accounts</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">getent group sudo</span><span class="cheat-desc">who can sudo</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">grep NOPASSWD /etc/sudoers*</span><span class="cheat-desc">passwordless sudo</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">lastb | head</span><span class="cheat-desc">failed logins</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">tail /var/log/auth.log</span><span class="cheat-desc">auth events</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Key Files</h4>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/passwd</span><span class="cheat-desc">user database</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/shadow</span><span class="cheat-desc">password hashes</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/group</span><span class="cheat-desc">group database</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/sudoers</span><span class="cheat-desc">sudo policy</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">/etc/sudoers.d/</span><span class="cheat-desc">drop-in policies</span></div>
+    </div>
+    <div class="cheat-card">
+      <h4>Switch User</h4>
+      <div class="cheat-row"><span class="cheat-cmd">su - user</span><span class="cheat-desc">full login shell</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo su -</span><span class="cheat-desc">root via sudo</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">sudo -u user cmd</span><span class="cheat-desc">one command as user</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">whoami</span><span class="cheat-desc">current user</span></div>
+      <div class="cheat-row"><span class="cheat-cmd">exit</span><span class="cheat-desc">return to previous user</span></div>
+    </div>
+  </div>
+
+  <div class="recap" style="margin-top:24px;">
+    <h4>📝 One-Day Revision Plan</h4>
+    <ul>
+      <li><strong style="color:var(--acc);">15 min</strong> — Read /etc/passwd and /etc/shadow on your system. Decode every field for 3 entries.</li>
+      <li><strong style="color:var(--acc);">20 min</strong> — Run Lab 1 from scratch: create user, add to group, switch to it, delete it — all from memory.</li>
+      <li><strong style="color:var(--acc);">15 min</strong> — Run the security audit commands. Note any findings on your test system.</li>
+      <li><strong style="color:var(--acc);">10 min</strong> — Answer the 10 self-test questions without notes. Mark anything you hesitate on.</li>
+    </ul>
+  </div>
+
+  <div class="senior-block">
+    <h4>How a senior engineer thinks about users and groups</h4>
+    <p style="color:var(--text2);font-size:14px;line-height:1.75;">Every user account is a security boundary. Senior engineers treat user and group design like network firewall rules — default deny, explicit allow. A web application does not need to read <code>/etc/shadow</code>. A deployment script does not need to restart every service on the system. Each account gets exactly the minimal set of permissions for its job, applied through the combination of file ownership, group membership, and scoped sudoers rules. They automate provisioning so it is consistent and auditable. And they always check the auth log during incidents — <strong style="color:var(--text);">if something unexpected happened on a Linux system, <code>/var/log/auth.log</code> was watching.</strong></p>
+  </div>
+</div>
+
+</main>
+</div>
+
+<button class="mob-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<script>
+const navIds = ['overview','s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20'];
+
+function updateNav() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = pct + '% read';
+  let current = 'overview';
+  for (const id of navIds) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 120) current = id;
+  }
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.getAttribute('href') === '#' + current);
+  });
+}
+
+window.addEventListener('scroll', updateNav);
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    this.classList.add('active');
+    const sidebar = document.querySelector('.sidebar');
+    const itemTop = this.offsetTop;
+    if (itemTop > sidebar.scrollTop + sidebar.clientHeight - 80 || itemTop < sidebar.scrollTop + 60) {
+      sidebar.scrollTop = itemTop - sidebar.clientHeight / 2;
+    }
+  });
+});
+
+updateNav();
+</script>
+</body>
+</html>
